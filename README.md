@@ -36,6 +36,8 @@ There are two schedule kinds.
 
 A date is shared free time when both people are free. Consecutive shared dates are one period, even when the run crosses a month boundary or 31 December. If you are looking at January and a shared run started on 31 December, the list shows the whole run.
 
+The summary at the top counts shared days in the selected month. When that month is the current month or a later one, it also names the period that includes today, or the earliest later period. A past month shows the count and says those dates have passed. It does not call them upcoming.
+
 Leap days are ordinary civil days. In 2024, 29 February exists and the cycle advances across it. In 1900, which is not a leap year, 28 February is followed by 1 March. The weekday of a date comes from the civil serial, with 1 January 1970 fixed as Thursday.
 
 The only use of the system clock is choosing "today" for the first month and the demo anchor. That reading uses the local calendar year, month, and day.
@@ -44,7 +46,7 @@ The only use of the system clock is choosing "today" for the first month and the
 
 ```text
 src/calendar/     civil dates, schedule status, shared-free intervals
-src/schedules/    presets, demo pair, saved-state parsing
+src/schedules/    presets, demo pair, saved state, month summary
 src/ui/           React screens
 src/styles.css    visual rules
 tests/            engine and state tests

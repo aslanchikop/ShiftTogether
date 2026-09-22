@@ -61,29 +61,28 @@ export function ScheduleEditor({ headingId, fallbackName, person, today, onChang
   };
 
   return (
-    <section className="card" aria-labelledby={headingId}>
+    <section className="card person-card" aria-labelledby={headingId}>
       <h2 id={headingId}>{shownName}</h2>
-      <label className="field">
-        <span>Name</span>
-        <input
-          value={person.name}
-          maxLength={40}
-          onChange={(event) => onChange({ ...person, name: event.target.value })}
-        />
-      </label>
-      <label className="field">
-        <span>Schedule</span>
-        <select
-          value={preset}
-          onChange={(event) => selectPreset(event.target.value as PresetId)}
-        >
-          {PRESET_OPTIONS.map((option) => (
-            <option key={option.id} value={option.id}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </label>
+      <div className="field-grid">
+        <label className="field">
+          <span>Name</span>
+          <input
+            value={person.name}
+            maxLength={40}
+            onChange={(event) => onChange({ ...person, name: event.target.value })}
+          />
+        </label>
+        <label className="field">
+          <span>Schedule</span>
+          <select value={preset} onChange={(event) => selectPreset(event.target.value as PresetId)}>
+            {PRESET_OPTIONS.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
 
       {schedule.type === 'cycle' ? (
         <>
@@ -102,8 +101,8 @@ export function ScheduleEditor({ headingId, fallbackName, person, today, onChang
             />
           </label>
           <p className="hint">
-            Day 1 of the cycle is the anchor. Earlier dates continue the same cycle backward.
-            On the anchor, {shownName} is {dayStatus(schedule, schedule.anchor)}.
+            Day 1 is the anchor. Earlier dates continue this cycle backward. On the anchor, {shownName} is{' '}
+            {dayStatus(schedule, schedule.anchor)}.
           </p>
           <ul className="pattern">
             {schedule.pattern.map((kind, index) => (
@@ -157,7 +156,7 @@ export function ScheduleEditor({ headingId, fallbackName, person, today, onChang
         </>
       ) : (
         <>
-          <p className="hint">Checked days are working days. The other days are free. This schedule has no anchor.</p>
+          <p className="hint">Filled days are work. Open days are free. This schedule has no anchor.</p>
           <ul className="pattern">
             {WEEKDAY_TOGGLES.map((weekday) => {
               const pressed = schedule.workdays.includes(weekday.day);

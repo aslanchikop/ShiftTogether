@@ -69,7 +69,7 @@ describe('civil dates', () => {
       ['1996-01-01', '2005-01-01'],
       ['2020-01-01', '2033-01-01'],
     ] as const) {
-      let iso = start;
+      let iso: string = start;
       while (iso !== end) {
         const next = formatIsoDate(stepForward(parseIsoDate(iso)));
         if (addDays(iso, 1) !== next || addDays(next, -1) !== iso || fromCivilSerial(toCivilSerial(iso)) !== iso) {

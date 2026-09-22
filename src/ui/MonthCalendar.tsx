@@ -83,8 +83,8 @@ export function MonthCalendar({ year, month, personA, personB, today }: MonthCal
         </tbody>
       </table>
       <ul className="legend">
-        <li data-status="working">
-          <span className="swatch" /> Both working
+        <li data-status="shared">
+          <span className="swatch" /> Both free
         </li>
         <li data-status="free-a">
           <span className="swatch" /> Only {nameA} free
@@ -92,8 +92,8 @@ export function MonthCalendar({ year, month, personA, personB, today }: MonthCal
         <li data-status="free-b">
           <span className="swatch" /> Only {nameB} free
         </li>
-        <li data-status="shared">
-          <span className="swatch" /> Both free
+        <li data-status="working">
+          <span className="swatch" /> Both working
         </li>
       </ul>
     </div>

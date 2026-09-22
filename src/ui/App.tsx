@@ -1,19 +1,13 @@
 import { useEffect, useState } from 'react';
-import {
-  MONTH_NAMES,
-  daysInMonth,
-  formatIsoDate,
-  parseIsoDate,
-  sharedFreeDates,
-  sharedFreeIntervals,
-  shiftMonth,
-} from '../calendar';
+import { MONTH_NAMES, daysInMonth, formatIsoDate, parseIsoDate, shiftMonth } from '../calendar';
 import { createDemoPeople } from '../schedules/demo';
 import { loadAppState, saveAppState } from '../schedules/state';
+import { summarizeSharedMonth } from '../schedules/summary';
 import type { AppState, PersonConfig } from '../schedules/types';
 import { IntervalList } from './IntervalList';
 import { MonthCalendar } from './MonthCalendar';
 import { ScheduleEditor } from './ScheduleEditor';
+import { SharedSummary } from './SharedSummary';
 import { localCivilToday } from './today';
 
 const MIN_VIEW_YEAR = 1900;
@@ -58,13 +52,13 @@ export function App() {
     month: state.month,
     day: daysInMonth(state.year, state.month),
   });
-  const intervals = sharedFreeIntervals(state.personA.schedule, state.personB.schedule, monthStart, monthEnd);
-  const sharedDayCount = sharedFreeDates(
+  const summary = summarizeSharedMonth(
     state.personA.schedule,
     state.personB.schedule,
     monthStart,
     monthEnd,
-  ).length;
+    today,
+  );
   const monthLabel = `${MONTH_NAMES[state.month - 1]} ${state.year}`;
 
   const moveMonth = (delta: number) => {
@@ -89,15 +83,41 @@ export function App() {
         <div>
           <p className="eyebrow">ShiftTogether</p>
           <h1>Days you are both free</h1>
-          <p className="lede">
-            Compare two work schedules on this device. A 2-on/2-off rotation and a Monday–Friday week are filled in
-            so you can see an overlap straight away.
-          </p>
+          <p className="lede">Compare two schedules on this device. Shared free days for the selected month are counted at the top.</p>
         </div>
         <button type="button" className="reset" onClick={resetDemo}>
           Reset example
         </button>
       </header>
+
+      <SharedSummary summary={summary} monthLabel={monthLabel}>
+        <div className="month-controls">
+          <button type="button" aria-label="Previous month" onClick={() => moveMonth(-1)}>
+            Previous
+          </button>
+          <label className="sr-only" htmlFor="month-input">
+            Choose month
+          </label>
+          <input
+            id="month-input"
+            type="month"
+            value={monthValue(state.year, state.month)}
+            min={`${MIN_VIEW_YEAR}-01`}
+            max={`${MAX_VIEW_YEAR}-12`}
+            onChange={(event) => {
+              const match = /^(\d{4})-(\d{2})$/.exec(event.target.value);
+              if (!match) return;
+              const year = Number(match[1]);
+              const month = Number(match[2]);
+              if (year < MIN_VIEW_YEAR || year > MAX_VIEW_YEAR || month < 1 || month > 12) return;
+              setState((current) => ({ ...current, year, month }));
+            }}
+          />
+          <button type="button" aria-label="Next month" onClick={() => moveMonth(1)}>
+            Next
+          </button>
+        </div>
+      </SharedSummary>
 
       <div className="people">
         <ScheduleEditor
@@ -116,36 +136,7 @@ export function App() {
         />
       </div>
 
-      <section className="card calendar-card" aria-labelledby="month-heading">
-        <div className="month-bar">
-          <h2 id="month-heading">{monthLabel}</h2>
-          <div className="month-controls">
-            <button type="button" onClick={() => moveMonth(-1)}>
-              Previous month
-            </button>
-            <label className="sr-only" htmlFor="month-input">
-              Choose month
-            </label>
-            <input
-              id="month-input"
-              type="month"
-              value={monthValue(state.year, state.month)}
-              min={`${MIN_VIEW_YEAR}-01`}
-              max={`${MAX_VIEW_YEAR}-12`}
-              onChange={(event) => {
-                const match = /^(\d{4})-(\d{2})$/.exec(event.target.value);
-                if (!match) return;
-                const year = Number(match[1]);
-                const month = Number(match[2]);
-                if (year < MIN_VIEW_YEAR || year > MAX_VIEW_YEAR || month < 1 || month > 12) return;
-                setState((current) => ({ ...current, year, month }));
-              }}
-            />
-            <button type="button" onClick={() => moveMonth(1)}>
-              Next month
-            </button>
-          </div>
-        </div>
+      <section className="card calendar-card" aria-label={`${monthLabel} calendar`}>
         <MonthCalendar
           year={state.year}
           month={state.month}
@@ -156,11 +147,11 @@ export function App() {
       </section>
 
       <IntervalList
-        intervals={intervals}
+        intervals={summary.intervals}
         monthStart={monthStart}
         monthEnd={monthEnd}
-        sharedDayCount={sharedDayCount}
-        monthLabel={monthLabel}
+        monthRelation={summary.monthRelation}
+        today={today}
       />
 
       <footer>
