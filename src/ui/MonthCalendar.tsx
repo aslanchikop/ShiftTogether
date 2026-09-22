@@ -1,4 +1,4 @@
-import { buildMonthGrid, dayStatus, type DayKind } from '../calendar';
+import { buildMonthGrid, compareIso, dayStatus, type DayKind } from '../calendar';
 import { fill, formatCivilDate } from '../i18n/format';
 import { useI18n } from '../i18n/LocaleProvider';
 import type { PersonConfig } from '../schedules/types';
@@ -15,7 +15,14 @@ interface MonthCalendarProps {
   onSelectYear: (year: number) => void;
   minYear: number;
   maxYear: number;
-  markedDate?: string | null;
+  preview?: {
+    date: string;
+    start: string;
+    end: string;
+    cell: string;
+    cellLabel: string;
+    spanLabel: string;
+  } | null;
 }
 
 type CellStatus = 'shared' | 'free-a' | 'free-b' | 'working';
@@ -58,7 +65,7 @@ export function MonthCalendar({
   onSelectYear,
   minYear,
   maxYear,
-  markedDate = null,
+  preview = null,
 }: MonthCalendarProps) {
   const { locale, messages } = useI18n();
   const nameA = displayName(personA.name, messages.schedules.fallbackA);
@@ -129,8 +136,15 @@ export function MonthCalendar({
                 const statusB = dayStatus(personB.schedule, cell.date);
                 const status = cellStatus(statusA, statusB);
                 const dayNumber = Number(cell.date.slice(8, 10));
-                const label =
-                  status === 'shared'
+                const proposed = preview?.date === cell.date;
+                const inPreviewSpan =
+                  preview !== null &&
+                  !proposed &&
+                  compareIso(cell.date, preview.start) >= 0 &&
+                  compareIso(cell.date, preview.end) <= 0;
+                const label = proposed
+                  ? preview.cell
+                  : status === 'shared'
                     ? messages.calendar.both
                     : status === 'free-a'
                       ? messages.calendar.personA
@@ -139,8 +153,7 @@ export function MonthCalendar({
                         : messages.calendar.work;
                 const todayText = cell.date === today ? ` ${messages.calendar.today}` : '';
                 const outsideText = cell.inMonth ? '' : ` ${messages.calendar.outside}`;
-                const marked = cell.date === markedDate;
-                const markedText = marked ? ` ${messages.calendar.suggest}` : '';
+                const previewText = proposed ? ` ${preview.cellLabel}` : inPreviewSpan ? ` ${preview.spanLabel}` : '';
                 return (
                   <td
                     key={cell.date}
@@ -148,8 +161,8 @@ export function MonthCalendar({
                     data-status={status}
                     data-outside={cell.inMonth ? 'false' : 'true'}
                     data-today={cell.date === today ? 'true' : 'false'}
-                    data-suggest={marked ? 'true' : 'false'}
-                    aria-label={`${formatCivilDate(cell.date, locale)}: ${describe(status, nameA, nameB, messages.calendar.bothFree, messages.calendar.bothWorking, messages.calendar.freeName)}.${todayText}${outsideText}${markedText}`}
+                    data-preview={proposed ? 'proposed' : inPreviewSpan ? 'span' : 'false'}
+                    aria-label={`${formatCivilDate(cell.date, locale)}: ${describe(status, nameA, nameB, messages.calendar.bothFree, messages.calendar.bothWorking, messages.calendar.freeName)}.${todayText}${outsideText}${previewText}`}
                   >
                     <span className="num">{dayNumber}</span>
                     <span className={status === 'working' ? 'tag quiet' : 'tag'}>{label}</span>
@@ -173,6 +186,11 @@ export function MonthCalendar({
         <li data-status="working">
           <span className="swatch" /> {messages.calendar.legendWork}
         </li>
+        {preview ? (
+          <li data-status="preview">
+            <span className="swatch" /> {messages.calendar.legendOff}
+          </li>
+        ) : null}
       </ul>
     </div>
   );

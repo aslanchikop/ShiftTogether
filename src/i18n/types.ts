@@ -42,6 +42,7 @@ export interface Messages {
     personA: string;
     personB: string;
     work: string;
+    legendOff: string;
     legendBoth: string;
     legendA: string;
     legendB: string;
@@ -86,6 +87,8 @@ export interface Messages {
     anchorYear: string;
     fallbackA: string;
     fallbackB: string;
+    demoA: string;
+    demoB: string;
   };
   bridge: {
     heading: string;
@@ -98,6 +101,23 @@ export interface Messages {
     inspect: string;
     inspectLabel: string;
     title: string;
+  };
+  preview: {
+    action: string;
+    viewing: string;
+    exit: string;
+    title: string;
+    notApplied: string;
+    who: string;
+    before: string;
+    after: string;
+    none: string;
+    and: string;
+    gained: string;
+    cell: string;
+    cellLabel: string;
+    spanLabel: string;
+    legend: string;
   };
   quantity: {
     day: PluralForms;

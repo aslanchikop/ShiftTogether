@@ -226,9 +226,89 @@ h2 {
 
 .suggest-note { margin: 0 0 0.6rem; }
 
-.calendar td[data-suggest="true"] {
-  outline: 2px dashed var(--accent);
-  outline-offset: -4px;
+.calendar td[data-preview="proposed"] {
+  background-color: #fff;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 3px,
+    rgba(27, 107, 69, 0.28) 3px,
+    rgba(27, 107, 69, 0.28) 5px
+  );
+  color: var(--ink);
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.calendar td[data-preview="proposed"] .tag {
+  color: var(--accent);
+}
+
+.calendar td[data-preview="span"] {
+  box-shadow: inset 0 -3px 0 var(--accent);
+}
+
+.legend li[data-status="preview"] .swatch {
+  background-color: #fff;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 2px,
+    rgba(27, 107, 69, 0.45) 2px,
+    rgba(27, 107, 69, 0.45) 3px
+  );
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.preview-banner {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+  margin-bottom: 0.8rem;
+  padding: 0.85rem 1rem;
+  border: 1px dashed var(--accent);
+  border-radius: 16px;
+  background: #fff;
+}
+
+.preview-who {
+  margin: 0.2rem 0 0;
+  font-family: var(--serif);
+  font-size: 1.25rem;
+  line-height: 1.25;
+}
+
+.preview-note {
+  margin: 0.3rem 0 0.55rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.preview-compare {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem 0.8rem;
+  margin: 0;
+}
+
+.preview-compare dt {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.preview-compare dd {
+  margin: 0.15rem 0 0;
+  font-weight: 600;
+}
+
+.preview-exit {
+  flex: 0 0 auto;
+  background: var(--ink);
+  color: #fff;
+  border-color: var(--ink);
 }
 
 .workspace {
@@ -384,8 +464,8 @@ footer p {
   margin-top: 0.28rem;
   font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .calendar td[data-status="working"] .tag {
@@ -628,7 +708,7 @@ footer p {
 }
 
 .toggle-day { font-size: 0.78rem; }
-.toggle-kind { font-size: 0.68rem; letter-spacing: 0.03em; text-transform: uppercase; }
+.toggle-kind { font-size: 0.68rem; letter-spacing: 0; text-transform: none; }
 
 .day-toggle.work {
   background: var(--ink);
@@ -688,6 +768,9 @@ footer {
   .reset { flex: 1; }
   .bridge-card { grid-template-columns: 1fr; }
   .bridge-card button { grid-column: 1; grid-row: auto; justify-self: start; }
+  .preview-banner { flex-direction: column; }
+  .preview-compare { grid-template-columns: 1fr; }
+  .preview-exit { width: 100%; }
   .field-grid { grid-template-columns: 1fr; }
   .calendar { border-spacing: 3px; }
   .calendar td { height: 3.7rem; border-radius: 9px; }

@@ -148,3 +148,50 @@ export function bridgeEmpty(locale: Locale): string {
     days: quantity(locale, BRIDGE_SEARCH_DAYS, copy.quantity.day).replace(`${BRIDGE_SEARCH_DAYS} `, ''),
   });
 }
+
+export interface PreviewComparison {
+  who: string;
+  before: string;
+  after: string;
+  gained: string;
+  cellLabel: string;
+  kind: BridgeCardCopy['kind'];
+}
+
+function baselinePhrase(item: BridgeRecommendation, today: string, locale: Locale): string {
+  const copy = catalogs[locale].preview;
+  if (item.baselineIntervals.length === 0) return copy.none;
+  return item.baselineIntervals
+    .map((interval) => {
+      const range = formatRange(interval.start, interval.end, today, locale);
+      return `${range} · ${quantity(locale, interval.days, catalogs[locale].quantity.day)}`;
+    })
+    .join(` ${copy.and} `);
+}
+
+/** Before/after wording. `gained` is only the newly shared days, not the whole run. */
+export function previewComparison(
+  item: BridgeRecommendation,
+  name: string,
+  today: string,
+  locale: Locale,
+): PreviewComparison {
+  const copy = catalogs[locale];
+  const afterRange = formatRange(item.resulting.start, item.resulting.end, today, locale);
+  const total = quantity(locale, item.resulting.days, copy.quantity.together);
+  const gained = quantity(locale, item.additionalSharedDays, copy.quantity.day);
+  return {
+    kind: bridgeKind(item.explanation),
+    who: fill(copy.preview.who, { name, date: formatCivilDate(item.date, locale) }),
+    before: baselinePhrase(item, today, locale),
+    after: `${afterRange} · ${total}`,
+    gained,
+    cellLabel: fill(copy.preview.cellLabel, {
+      name,
+      date: formatCivilDate(item.date, locale),
+      range: afterRange,
+      total,
+      gained,
+    }),
+  };
+}

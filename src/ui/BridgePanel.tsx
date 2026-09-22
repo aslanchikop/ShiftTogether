@@ -7,10 +7,11 @@ interface BridgePanelProps {
   nameA: string;
   nameB: string;
   today: string;
-  onInspect: (date: string) => void;
+  activeKey: string | null;
+  onPreview: (item: BridgeRecommendation) => void;
 }
 
-export function BridgePanel({ recommendations, nameA, nameB, today, onInspect }: BridgePanelProps) {
+export function BridgePanel({ recommendations, nameA, nameB, today, activeKey, onPreview }: BridgePanelProps) {
   const { locale, messages } = useI18n();
 
   return (
@@ -26,8 +27,10 @@ export function BridgePanel({ recommendations, nameA, nameB, today, onInspect }:
           {recommendations.map((item) => {
             const name = item.person === 'a' ? nameA : nameB;
             const card = bridgeCardCopy(item, name, today, locale);
+            const key = `${item.person}:${item.date}`;
+            const active = key === activeKey;
             return (
-              <li key={`${item.person}:${item.date}`}>
+              <li key={key}>
                 <article className={`bridge-card bridge-${card.kind}`}>
                   <p className="bridge-effect">{card.effect}</p>
                   <h3>{card.title}</h3>
@@ -36,8 +39,13 @@ export function BridgePanel({ recommendations, nameA, nameB, today, onInspect }:
                     <span>{card.total}</span>
                     <span className="bridge-gain">{card.gained}</span>
                   </p>
-                  <button type="button" aria-label={messages.bridge.inspectLabel} onClick={() => onInspect(item.date)}>
-                    {messages.bridge.inspect}
+                  <button
+                    type="button"
+                    aria-pressed={active}
+                    aria-label={messages.preview.action}
+                    onClick={() => onPreview(item)}
+                  >
+                    {active ? messages.preview.viewing : messages.preview.action}
                   </button>
                 </article>
               </li>

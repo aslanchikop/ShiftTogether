@@ -1,15 +1,17 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { daysInMonth, formatIsoDate, parseIsoDate, shiftMonth } from '../calendar';
-import { LOCALE_NAMES, LOCALES } from '../i18n/types';
-import { monthTitle } from '../i18n/format';
+import { monthTitle, previewComparison } from '../i18n/format';
 import { useI18n } from '../i18n/LocaleProvider';
-import { findBridgeRecommendations } from '../schedules/bridge';
+import { LOCALE_NAMES, LOCALES } from '../i18n/types';
+import { findBridgeRecommendations, type BridgeRecommendation } from '../schedules/bridge';
 import { createDemoPeople } from '../schedules/demo';
+import { previewAfterViewChange, reconcilePreview, sameRecommendation, type PreviewSession } from '../schedules/preview';
 import { loadAppState, saveAppState } from '../schedules/state';
 import { findNextSharedPeriod, summarizeSharedMonth } from '../schedules/summary';
 import type { AppState, PersonConfig } from '../schedules/types';
 import { BridgePanel } from './BridgePanel';
 import { MonthCalendar } from './MonthCalendar';
+import { PreviewBanner } from './PreviewBanner';
 import { NextTogether } from './NextTogether';
 import { PeriodList } from './PeriodList';
 import { ScheduleEditor } from './ScheduleEditor';
@@ -29,14 +31,14 @@ function viewMonth(year: number, month: number, today: string): { year: number; 
   return { year: 2000, month: 1 };
 }
 
-function createInitialState(today: string): AppState {
+function createInitialState(today: string, names: { personA: string; personB: string }): AppState {
   const saved = loadAppState();
   if (saved) {
     const month = viewMonth(saved.year, saved.month, today);
     return { ...saved, ...month };
   }
   const month = viewMonth(0, 0, today);
-  return { ...createDemoPeople(today), ...month };
+  return { ...createDemoPeople(today, names), ...month };
 }
 
 function displayName(name: string, fallback: string): string {
@@ -47,9 +49,10 @@ function displayName(name: string, fallback: string): string {
 export function App() {
   const { locale, messages, setLocale } = useI18n();
   const [today] = useState(localCivilToday);
-  const [state, setState] = useState<AppState>(() => createInitialState(today));
+  const demoNames = { personA: messages.schedules.demoA, personB: messages.schedules.demoB };
+  const [state, setState] = useState<AppState>(() => createInitialState(today, demoNames));
   const [view, setView] = useState<'find' | 'make'>('find');
-  const [markedDate, setMarkedDate] = useState<string | null>(null);
+  const [preview, setPreview] = useState<PreviewSession | null>(null);
 
   useEffect(() => {
     saveAppState(state);
@@ -69,7 +72,10 @@ export function App() {
     today,
   );
   const next = findNextSharedPeriod(state.personA.schedule, state.personB.schedule, today);
-  const bridges = findBridgeRecommendations(state.personA.schedule, state.personB.schedule, today);
+  const bridges = useMemo(
+    () => findBridgeRecommendations(state.personA.schedule, state.personB.schedule, today),
+    [state.personA, state.personB, today],
+  );
   const monthLabel = monthTitle(state.year, state.month, locale);
   const nameA = displayName(state.personA.name, messages.schedules.fallbackA);
   const nameB = displayName(state.personB.name, messages.schedules.fallbackB);
@@ -85,25 +91,67 @@ export function App() {
     setState((current) => ({ ...current, ...visible }));
   };
 
+  useEffect(() => {
+    setPreview((current) => {
+      if (!current) return null;
+      const next = reconcilePreview(current.recommendation, bridges);
+      if (!next) return null;
+      if (sameRecommendation(current.recommendation, next)) return current;
+      return { ...current, recommendation: next };
+    });
+  }, [bridges]);
+
   const resetDemo = () => {
     const currentToday = localCivilToday();
-    setMarkedDate(null);
+    setPreview(null);
     setView('find');
-    setState({ ...createDemoPeople(currentToday), ...viewMonth(0, 0, currentToday) });
+    setState({
+      ...createDemoPeople(currentToday, {
+        personA: messages.schedules.demoA,
+        personB: messages.schedules.demoB,
+      }),
+      ...viewMonth(0, 0, currentToday),
+    });
   };
 
   const setPerson = (key: 'personA' | 'personB', person: PersonConfig) => {
-    setMarkedDate(null);
     setState((current) => ({ ...current, [key]: person }));
   };
 
-  const inspectBridge = (date: string) => {
-    const parts = parseIsoDate(date);
+  const exitPreview = () => {
+    if (preview) showMonth(preview.returnYear, preview.returnMonth);
+    setPreview(null);
+  };
+
+  const startPreview = (recommendation: BridgeRecommendation) => {
+    if (
+      preview &&
+      preview.recommendation.person === recommendation.person &&
+      preview.recommendation.date === recommendation.date
+    ) {
+      exitPreview();
+      return;
+    }
+    const parts = parseIsoDate(recommendation.date);
+    setPreview({
+      recommendation,
+      returnYear: preview?.returnYear ?? state.year,
+      returnMonth: preview?.returnMonth ?? state.month,
+    });
     showMonth(parts.year, parts.month);
-    setMarkedDate(date);
     const motion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     document.getElementById('shared-calendar')?.scrollIntoView({ behavior: motion ? 'auto' : 'smooth', block: 'start' });
   };
+
+  const shownPreview = previewAfterViewChange(preview);
+  const previewName = shownPreview
+    ? shownPreview.recommendation.person === 'a'
+      ? nameA
+      : nameB
+    : '';
+  const previewCopy = shownPreview
+    ? previewComparison(shownPreview.recommendation, previewName, today, locale)
+    : null;
 
   return (
     <div className="page">
@@ -159,12 +207,18 @@ export function App() {
               nameA={nameA}
               nameB={nameB}
               today={today}
-              onInspect={inspectBridge}
+              activeKey={shownPreview ? `${shownPreview.recommendation.person}:${shownPreview.recommendation.date}` : null}
+              onPreview={startPreview}
             />
           )}
           <section className="calendar-panel" id="shared-calendar" aria-label={`${monthLabel} calendar`}>
-            {markedDate ? (
-              <p className="suggest-note">{messages.calendar.suggestNote}</p>
+            {shownPreview && previewCopy ? (
+              <PreviewBanner
+                recommendation={shownPreview.recommendation}
+                name={previewName}
+                today={today}
+                onExit={exitPreview}
+              />
             ) : null}
             <MonthCalendar
               year={state.year}
@@ -172,7 +226,18 @@ export function App() {
               personA={state.personA}
               personB={state.personB}
               today={today}
-              markedDate={markedDate}
+              preview={
+                shownPreview && previewCopy
+                  ? {
+                      date: shownPreview.recommendation.date,
+                      start: shownPreview.recommendation.resulting.start,
+                      end: shownPreview.recommendation.resulting.end,
+                      cell: messages.preview.cell,
+                      cellLabel: previewCopy.cellLabel,
+                      spanLabel: messages.preview.spanLabel,
+                    }
+                  : null
+              }
               minYear={MIN_VIEW_YEAR}
               maxYear={MAX_VIEW_YEAR}
               onPrevious={() => moveMonth(-1)}
