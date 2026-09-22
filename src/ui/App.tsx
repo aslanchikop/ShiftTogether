@@ -2,12 +2,12 @@ import { useEffect, useState } from 'react';
 import { MONTH_NAMES, daysInMonth, formatIsoDate, parseIsoDate, shiftMonth } from '../calendar';
 import { createDemoPeople } from '../schedules/demo';
 import { loadAppState, saveAppState } from '../schedules/state';
-import { summarizeSharedMonth } from '../schedules/summary';
+import { findNextSharedPeriod, summarizeSharedMonth } from '../schedules/summary';
 import type { AppState, PersonConfig } from '../schedules/types';
-import { IntervalList } from './IntervalList';
 import { MonthCalendar } from './MonthCalendar';
+import { NextTogether } from './NextTogether';
+import { PeriodList } from './PeriodList';
 import { ScheduleEditor } from './ScheduleEditor';
-import { SharedSummary } from './SharedSummary';
 import { localCivilToday } from './today';
 
 const MIN_VIEW_YEAR = 1900;
@@ -34,10 +34,6 @@ function createInitialState(today: string): AppState {
   return { ...createDemoPeople(today), ...month };
 }
 
-function monthValue(year: number, month: number): string {
-  return `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}`;
-}
-
 export function App() {
   const [today] = useState(localCivilToday);
   const [state, setState] = useState<AppState>(() => createInitialState(today));
@@ -59,18 +55,23 @@ export function App() {
     monthEnd,
     today,
   );
+  const next = findNextSharedPeriod(state.personA.schedule, state.personB.schedule, today);
   const monthLabel = `${MONTH_NAMES[state.month - 1]} ${state.year}`;
 
   const moveMonth = (delta: number) => {
-    const next = shiftMonth(state.year, state.month, delta);
-    if (next.year < MIN_VIEW_YEAR || next.year > MAX_VIEW_YEAR) return;
-    setState((current) => ({ ...current, year: next.year, month: next.month }));
+    const shifted = shiftMonth(state.year, state.month, delta);
+    if (shifted.year < MIN_VIEW_YEAR || shifted.year > MAX_VIEW_YEAR) return;
+    setState((current) => ({ ...current, year: shifted.year, month: shifted.month }));
+  };
+
+  const showMonth = (year: number, month: number) => {
+    const visible = viewMonth(year, month, today);
+    setState((current) => ({ ...current, ...visible }));
   };
 
   const resetDemo = () => {
     const currentToday = localCivilToday();
-    const month = viewMonth(0, 0, currentToday);
-    setState({ ...createDemoPeople(currentToday), ...month });
+    setState({ ...createDemoPeople(currentToday), ...viewMonth(0, 0, currentToday) });
   };
 
   const setPerson = (key: 'personA' | 'personB', person: PersonConfig) => {
@@ -82,77 +83,70 @@ export function App() {
       <header className="top">
         <div>
           <p className="eyebrow">ShiftTogether</p>
-          <h1>Days you are both free</h1>
-          <p className="lede">Compare two schedules on this device. Shared free days for the selected month are counted at the top.</p>
+          <h1>When are you both free?</h1>
         </div>
         <button type="button" className="reset" onClick={resetDemo}>
           Reset example
         </button>
       </header>
 
-      <SharedSummary summary={summary} monthLabel={monthLabel}>
-        <div className="month-controls">
-          <button type="button" aria-label="Previous month" onClick={() => moveMonth(-1)}>
-            Previous
-          </button>
-          <label className="sr-only" htmlFor="month-input">
-            Choose month
-          </label>
-          <input
-            id="month-input"
-            type="month"
-            value={monthValue(state.year, state.month)}
-            min={`${MIN_VIEW_YEAR}-01`}
-            max={`${MAX_VIEW_YEAR}-12`}
-            onChange={(event) => {
-              const match = /^(\d{4})-(\d{2})$/.exec(event.target.value);
-              if (!match) return;
-              const year = Number(match[1]);
-              const month = Number(match[2]);
-              if (year < MIN_VIEW_YEAR || year > MAX_VIEW_YEAR || month < 1 || month > 12) return;
-              setState((current) => ({ ...current, year, month }));
-            }}
+      <div className="workspace">
+        <div className="primary">
+          <NextTogether
+            next={next}
+            summary={summary}
+            monthLabel={monthLabel}
+            monthStart={monthStart}
+            monthEnd={monthEnd}
+            today={today}
+            onShowPeriod={showMonth}
           />
-          <button type="button" aria-label="Next month" onClick={() => moveMonth(1)}>
-            Next
-          </button>
+          <section className="calendar-panel" aria-label={`${monthLabel} calendar`}>
+            <MonthCalendar
+              year={state.year}
+              month={state.month}
+              personA={state.personA}
+              personB={state.personB}
+              today={today}
+              minYear={MIN_VIEW_YEAR}
+              maxYear={MAX_VIEW_YEAR}
+              onPrevious={() => moveMonth(-1)}
+              onNext={() => moveMonth(1)}
+              onSelectMonth={(month) => showMonth(state.year, month)}
+              onSelectYear={(year) => showMonth(year, state.month)}
+            />
+          </section>
         </div>
-      </SharedSummary>
 
-      <div className="people">
-        <ScheduleEditor
-          headingId="person-a-heading"
-          fallbackName="Person A"
-          person={state.personA}
-          today={today}
-          onChange={(person) => setPerson('personA', person)}
-        />
-        <ScheduleEditor
-          headingId="person-b-heading"
-          fallbackName="Person B"
-          person={state.personB}
-          today={today}
-          onChange={(person) => setPerson('personB', person)}
-        />
+        <aside className="secondary">
+          <PeriodList
+            intervals={summary.intervals}
+            monthLabel={monthLabel}
+            monthRelation={summary.monthRelation}
+            today={today}
+          />
+          <section className="schedules" aria-labelledby="schedules-heading">
+            <div className="section-head">
+              <h2 id="schedules-heading">Schedules</h2>
+              <p>A shared day is one when both people are free.</p>
+            </div>
+            <ScheduleEditor
+              headingId="person-a-heading"
+              fallbackName="Person A"
+              person={state.personA}
+              today={today}
+              onChange={(person) => setPerson('personA', person)}
+            />
+            <ScheduleEditor
+              headingId="person-b-heading"
+              fallbackName="Person B"
+              person={state.personB}
+              today={today}
+              onChange={(person) => setPerson('personB', person)}
+            />
+          </section>
+        </aside>
       </div>
-
-      <section className="card calendar-card" aria-label={`${monthLabel} calendar`}>
-        <MonthCalendar
-          year={state.year}
-          month={state.month}
-          personA={state.personA}
-          personB={state.personB}
-          today={today}
-        />
-      </section>
-
-      <IntervalList
-        intervals={summary.intervals}
-        monthStart={monthStart}
-        monthEnd={monthEnd}
-        monthRelation={summary.monthRelation}
-        today={today}
-      />
 
       <footer>
         <p>Calculations stay in this browser. ShiftTogether is free software.</p>

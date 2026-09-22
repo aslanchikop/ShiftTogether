@@ -1,8 +1,12 @@
 import {
+  addDays,
   compareIso,
-  formatIntervalLabel,
+  isoWeekday,
+  parseIsoDate,
   sharedFreeDates,
   sharedFreeIntervals,
+  WEEKDAY_NAMES,
+  MONTH_NAMES,
   type DateInterval,
   type Schedule,
 } from '../calendar';
@@ -10,21 +14,22 @@ import {
 export type MonthRelation = 'past' | 'current' | 'future';
 export type PeriodTiming = 'past' | 'current' | 'upcoming';
 
-export interface HighlightedPeriod {
+/**
+ * How far ahead "your next days together" looks.
+ * A period that starts on the last day of this window is included.
+ * Anything later is outside the search, not proof that none exists.
+ */
+export const FORWARD_SEARCH_DAYS = 366;
+
+export interface NextSharedPeriod {
   interval: DateInterval;
   timing: 'current' | 'upcoming';
-  label: string;
 }
 
 export interface SharedMonthSummary {
   sharedDayCount: number;
   periodCount: number;
   monthRelation: MonthRelation;
-  /**
-   * The shared period in this month that includes today, or the earliest one
-   * that starts later. Absent for a past month, and when none remain.
-   */
-  nearest: HighlightedPeriod | null;
   intervals: DateInterval[];
 }
 
@@ -40,25 +45,29 @@ export function periodTiming(interval: DateInterval, today: string): PeriodTimin
   return 'current';
 }
 
-export function periodStatusLabel(timing: PeriodTiming, relation: MonthRelation): string {
-  if (relation === 'past' && timing !== 'past') return 'Extends beyond this month';
-  if (timing === 'past') return 'Passed';
-  if (timing === 'current') return 'Includes today';
+export function periodStatusLabel(timing: PeriodTiming): string {
+  if (timing === 'past') return 'Past';
+  if (timing === 'current') return 'Now';
   return 'Upcoming';
 }
 
-/** One status sentence. It never names a date the engine did not return. */
-export function summaryStatusText(summary: SharedMonthSummary, monthLabel: string): string {
-  if (summary.sharedDayCount === 0) {
-    if (summary.monthRelation === 'past') {
-      return `No shared free days in ${monthLabel}. This month has passed.`;
-    }
-    return `No shared free days in ${monthLabel}.`;
-  }
-  if (summary.monthRelation === 'past') return 'These dates have passed.';
-  if (!summary.nearest) return 'No upcoming shared free days remain this month.';
-  if (summary.nearest.timing === 'current') return `Includes today: ${summary.nearest.label}.`;
-  return `Next: ${summary.nearest.label}.`;
+/**
+ * Earliest shared-free period that includes today or starts after it,
+ * searching through today + FORWARD_SEARCH_DAYS.
+ * The displayed month is not an input: changing it cannot move this result.
+ */
+export function findNextSharedPeriod(
+  personA: Schedule,
+  personB: Schedule,
+  today: string,
+): NextSharedPeriod | null {
+  const horizonEnd = addDays(today, FORWARD_SEARCH_DAYS);
+  const intervals = sharedFreeIntervals(personA, personB, today, horizonEnd);
+  const candidate = intervals.find((interval) => compareIso(interval.end, today) >= 0);
+  if (!candidate) return null;
+  const timing = periodTiming(candidate, today);
+  if (timing === 'past') return null;
+  return { interval: candidate, timing };
 }
 
 export function summarizeSharedMonth(
@@ -69,29 +78,63 @@ export function summarizeSharedMonth(
   today: string,
 ): SharedMonthSummary {
   const intervals = sharedFreeIntervals(personA, personB, monthStart, monthEnd);
-  const sharedDayCount = sharedFreeDates(personA, personB, monthStart, monthEnd).length;
-  const relation = monthRelation(monthStart, monthEnd, today);
-
-  let nearest: HighlightedPeriod | null = null;
-  if (relation !== 'past') {
-    const candidate = intervals.find((interval) => periodTiming(interval, today) !== 'past');
-    if (candidate) {
-      const timing = periodTiming(candidate, today);
-      if (timing !== 'past') {
-        nearest = {
-          interval: candidate,
-          timing,
-          label: formatIntervalLabel(candidate.start, candidate.end),
-        };
-      }
-    }
-  }
-
   return {
-    sharedDayCount,
+    sharedDayCount: sharedFreeDates(personA, personB, monthStart, monthEnd).length,
     periodCount: intervals.length,
-    monthRelation: relation,
-    nearest,
+    monthRelation: monthRelation(monthStart, monthEnd, today),
     intervals,
   };
+}
+
+/** Compact range such as "3–4 October" or, across years, "31 December 2025 – 1 January 2026". */
+export function formatPeriodRange(start: string, end: string, today: string): string {
+  const a = parseIsoDate(start);
+  const b = parseIsoDate(end);
+  const todayYear = parseIsoDate(today).year;
+  const sameMonth = a.year === b.year && a.month === b.month;
+  const needsYear = a.year !== todayYear || b.year !== todayYear;
+
+  if (start === end) {
+    return needsYear ? `${a.day} ${MONTH_NAMES[a.month - 1]} ${a.year}` : `${a.day} ${MONTH_NAMES[a.month - 1]}`;
+  }
+  if (sameMonth) {
+    const year = needsYear ? ` ${a.year}` : '';
+    return `${a.day}–${b.day} ${MONTH_NAMES[a.month - 1]}${year}`;
+  }
+  if (a.year === b.year && !needsYear) {
+    return `${a.day} ${MONTH_NAMES[a.month - 1]} – ${b.day} ${MONTH_NAMES[b.month - 1]}`;
+  }
+  return `${a.day} ${MONTH_NAMES[a.month - 1]} ${a.year} – ${b.day} ${MONTH_NAMES[b.month - 1]} ${b.year}`;
+}
+
+export function formatWeekdaySpan(start: string, end: string): string {
+  const startName = WEEKDAY_NAMES[isoWeekday(start) - 1] ?? '';
+  const endName = WEEKDAY_NAMES[isoWeekday(end) - 1] ?? '';
+  return start === end ? startName : `${startName}–${endName}`;
+}
+
+/** "2 days · Saturday–Sunday" or "1 day · Saturday". */
+export function formatPeriodSpan(start: string, end: string, days: number): string {
+  const length = days === 1 ? '1 day' : `${days} days`;
+  return `${length} · ${formatWeekdaySpan(start, end)}`;
+}
+
+export function monthCountText(summary: SharedMonthSummary, monthLabel: string): string {
+  if (summary.sharedDayCount === 0) return `No shared days in ${monthLabel}.`;
+  const days = summary.sharedDayCount === 1 ? '1 shared day' : `${summary.sharedDayCount} shared days`;
+  const periods = summary.periodCount === 1 ? '1 period' : `${summary.periodCount} periods`;
+  const passed = summary.monthRelation === 'past' ? ' · already passed' : '';
+  return `${days} in ${monthLabel} · ${periods}${passed}`;
+}
+
+export function nextPeriodKicker(next: NextSharedPeriod, today: string): string {
+  if (next.timing === 'current' && next.interval.start === today && next.interval.days === 1) {
+    return 'You are both free today';
+  }
+  if (next.timing === 'current') return 'You are both free now';
+  return 'Your next days together';
+}
+
+export function horizonEmptyText(): string {
+  return `No shared free days in the next ${FORWARD_SEARCH_DAYS} days.`;
 }

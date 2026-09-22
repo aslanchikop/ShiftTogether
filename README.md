@@ -36,7 +36,7 @@ There are two schedule kinds.
 
 A date is shared free time when both people are free. Consecutive shared dates are one period, even when the run crosses a month boundary or 31 December. If you are looking at January and a shared run started on 31 December, the list shows the whole run.
 
-The summary at the top counts shared days in the selected month. When that month is the current month or a later one, it also names the period that includes today, or the earliest later period. A past month shows the count and says those dates have passed. It does not call them upcoming.
+The headline is the earliest shared period that includes today or starts later. The search looks 366 days ahead and says so when it finds nothing. It does not depend on the month shown in the calendar. The calendar still counts shared days in the month you are viewing, and marks those periods as now, upcoming, or past.
 
 Leap days are ordinary civil days. In 2024, 29 February exists and the cycle advances across it. In 1900, which is not a leap year, 28 February is followed by 1 March. The weekday of a date comes from the civil serial, with 1 January 1970 fixed as Thursday.
 

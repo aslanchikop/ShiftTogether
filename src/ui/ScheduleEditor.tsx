@@ -1,7 +1,8 @@
 import { useRef } from 'react';
-import { dayStatus, isIsoDate, type DayKind, type Schedule } from '../calendar';
+import { dayStatus, type DayKind, type Schedule } from '../calendar';
 import { PRESET_OPTIONS, patternForPreset, presetIdForPattern, type PresetId } from '../schedules/presets';
 import type { PersonConfig } from '../schedules/types';
+import { CivilDateField } from './CivilDateField';
 import { localCivilToday } from './today';
 
 const WEEKDAY_TOGGLES: { day: number; label: string }[] = [
@@ -61,7 +62,7 @@ export function ScheduleEditor({ headingId, fallbackName, person, today, onChang
   };
 
   return (
-    <section className="card person-card" aria-labelledby={headingId}>
+    <section className="person" aria-labelledby={headingId}>
       <h2 id={headingId}>{shownName}</h2>
       <div className="field-grid">
         <label className="field">
@@ -86,23 +87,17 @@ export function ScheduleEditor({ headingId, fallbackName, person, today, onChang
 
       {schedule.type === 'cycle' ? (
         <>
-          <label className="field">
-            <span>Anchor date</span>
-            <input
-              type="date"
+          <div className="field">
+            <span id={`${headingId}-anchor`}>Anchor date</span>
+            <CivilDateField
+              labelId={`${headingId}-anchor`}
               value={schedule.anchor}
-              min="0001-01-01"
-              max="9999-12-31"
-              onChange={(event) => {
-                const value = event.target.value;
-                if (!isIsoDate(value)) return;
-                updateSchedule({ ...schedule, anchor: value });
-              }}
+              onChange={(anchor) => updateSchedule({ ...schedule, anchor })}
             />
-          </label>
+          </div>
           <p className="hint">
-            Day 1 is the anchor. Earlier dates continue this cycle backward. On the anchor, {shownName} is{' '}
-            {dayStatus(schedule, schedule.anchor)}.
+            Day 1 of the cycle is this anchor. Dates before it keep stepping backward through the same pattern. On
+            the anchor, {shownName} is {dayStatus(schedule, schedule.anchor)}.
           </p>
           <ul className="pattern">
             {schedule.pattern.map((kind, index) => (
@@ -156,15 +151,15 @@ export function ScheduleEditor({ headingId, fallbackName, person, today, onChang
         </>
       ) : (
         <>
-          <p className="hint">Filled days are work. Open days are free. This schedule has no anchor.</p>
-          <ul className="pattern">
+          <p className="hint">Choose the days {shownName} works. Every other day is free. This schedule has no anchor.</p>
+          <ul className="pattern weekdays">
             {WEEKDAY_TOGGLES.map((weekday) => {
               const pressed = schedule.workdays.includes(weekday.day);
               return (
                 <li key={weekday.day}>
                   <button
                     type="button"
-                    className="chip"
+                    className={`chip day-toggle ${pressed ? 'work' : 'free'}`}
                     aria-pressed={pressed}
                     onClick={() => {
                       const workdays = pressed
@@ -173,7 +168,8 @@ export function ScheduleEditor({ headingId, fallbackName, person, today, onChang
                       updateSchedule({ type: 'weekdays', workdays });
                     }}
                   >
-                    {weekday.label}
+                    <span className="toggle-day">{weekday.label}</span>
+                    <span className="toggle-kind">{pressed ? 'Work' : 'Free'}</span>
                   </button>
                 </li>
               );

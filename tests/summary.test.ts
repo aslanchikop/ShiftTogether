@@ -1,10 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import type { Schedule } from '../src/calendar';
+import { addDays, dayStatus, parseIsoDate, type Schedule } from '../src/calendar';
 import {
+  FORWARD_SEARCH_DAYS,
+  findNextSharedPeriod,
+  formatPeriodRange,
+  formatPeriodSpan,
+  horizonEmptyText,
+  monthCountText,
   monthRelation,
+  nextPeriodKicker,
   periodStatusLabel,
   summarizeSharedMonth,
-  summaryStatusText,
 } from '../src/schedules/summary';
 
 const twoTwo: Schedule = {
@@ -20,78 +26,116 @@ const weekdays: Schedule = {
 
 const alwaysWork: Schedule = { type: 'cycle', pattern: ['work'], anchor: '2024-01-01' };
 
-describe('shared month summary', () => {
-  it('points at the next period and skips one that already passed', () => {
-    const summary = summarizeSharedMonth(twoTwo, weekdays, '2024-01-01', '2024-01-31', '2024-01-15');
-    expect(summary.monthRelation).toBe('current');
-    expect(summary.sharedDayCount).toBe(4);
-    expect(summary.periodCount).toBe(3);
-    expect(summary.nearest?.timing).toBe('upcoming');
-    expect(summary.nearest?.interval.start).toBe('2024-01-20');
-    expect(summaryStatusText(summary, 'January 2024')).toBe('Next: Saturday 20 January 2024.');
+function firstSharedOnOrAfter(from: string): string {
+  let cursor = from;
+  while (dayStatus(twoTwo, cursor) !== 'free' || dayStatus(weekdays, cursor) !== 'free') {
+    cursor = addDays(cursor, 1);
+  }
+  return cursor;
+}
+
+describe('next shared period', () => {
+  it('looks past the end of the month instead of stopping there', () => {
+    const today = '2024-01-29';
+    const month = summarizeSharedMonth(twoTwo, weekdays, '2024-01-01', '2024-01-31', today);
+    const next = findNextSharedPeriod(twoTwo, weekdays, today);
+    const expectedStart = firstSharedOnOrAfter(today);
+
+    expect(month.sharedDayCount).toBe(4);
+    expect(month.periodCount).toBe(3);
+    expect(parseIsoDate(expectedStart).month).not.toBe(1);
+    expect(next?.timing).toBe('upcoming');
+    expect(next?.interval.start).toBe(expectedStart);
+    expect(nextPeriodKicker(next!, today)).toBe('Your next days together');
   });
 
-  it('calls the period that contains today current, not upcoming', () => {
-    const summary = summarizeSharedMonth(twoTwo, weekdays, '2024-01-01', '2024-01-31', '2024-01-27');
-    expect(summary.nearest?.timing).toBe('current');
-    expect(summary.nearest?.interval).toMatchObject({ start: '2024-01-27', end: '2024-01-28' });
-    expect(summaryStatusText(summary, 'January 2024')).toBe('Includes today: 27–28 January 2024.');
-  });
+  it('keeps the same next period when the question is not tied to a displayed month', () => {
+    const today = '2024-01-15';
+    const january = summarizeSharedMonth(twoTwo, weekdays, '2024-01-01', '2024-01-31', today);
+    const march = summarizeSharedMonth(twoTwo, weekdays, '2024-03-01', '2024-03-31', today);
+    const next = findNextSharedPeriod(twoTwo, weekdays, today);
 
-  it('does not present an upcoming date for a past month', () => {
-    const summary = summarizeSharedMonth(twoTwo, weekdays, '2024-01-01', '2024-01-31', '2024-02-02');
-    expect(summary.monthRelation).toBe('past');
-    expect(summary.nearest).toBeNull();
-    expect(summary.sharedDayCount).toBe(4);
-    expect(summaryStatusText(summary, 'January 2024')).toBe('These dates have passed.');
-    expect(summaryStatusText(summary, 'January 2024')).not.toMatch(/Next|Includes today/);
-  });
-
-  it('treats a future month as upcoming and names the earliest period', () => {
-    const summary = summarizeSharedMonth(twoTwo, weekdays, '2024-01-01', '2024-01-31', '2023-12-15');
-    expect(summary.monthRelation).toBe('future');
-    expect(summary.nearest?.timing).toBe('upcoming');
-    expect(summary.nearest?.interval.start).toBe('2024-01-07');
-    expect(summaryStatusText(summary, 'January 2024')).toBe('Next: Sunday 7 January 2024.');
-  });
-
-  it('says when the current month has shared days but none left', () => {
-    const summary = summarizeSharedMonth(twoTwo, weekdays, '2024-01-01', '2024-01-31', '2024-01-29');
-    expect(summary.nearest).toBeNull();
-    expect(summaryStatusText(summary, 'January 2024')).toBe('No upcoming shared free days remain this month.');
-  });
-
-  it('uses an empty state without inventing a date', () => {
-    const current = summarizeSharedMonth(alwaysWork, weekdays, '2024-01-01', '2024-01-31', '2024-01-15');
-    const past = summarizeSharedMonth(alwaysWork, weekdays, '2024-01-01', '2024-01-31', '2024-03-01');
-    expect(current.sharedDayCount).toBe(0);
-    expect(current.nearest).toBeNull();
-    expect(summaryStatusText(current, 'January 2024')).toBe('No shared free days in January 2024.');
-    expect(summaryStatusText(past, 'January 2024')).toBe(
-      'No shared free days in January 2024. This month has passed.',
+    expect(january.sharedDayCount).not.toBe(march.sharedDayCount);
+    expect(next?.interval.start).toBe('2024-01-20');
+    expect(next?.timing).toBe('upcoming');
+    expect(formatPeriodRange(next!.interval.start, next!.interval.end, today)).toBe('20 January');
+    expect(formatPeriodSpan(next!.interval.start, next!.interval.end, next!.interval.days)).toBe(
+      '1 day · Saturday',
     );
   });
 
-  it('keeps a run that started before the month when it includes today', () => {
-    const both: Schedule = {
-      type: 'cycle',
-      pattern: ['free', 'free', 'free', 'work', 'work', 'work', 'work'],
-      anchor: '2023-12-31',
-    };
-    const summary = summarizeSharedMonth(both, both, '2024-01-01', '2024-01-31', '2024-01-01');
-    expect(summary.nearest?.timing).toBe('current');
-    expect(summary.nearest?.interval.start).toBe('2023-12-31');
-    expect(summary.nearest?.interval.end).toBe('2024-01-02');
+  it('treats a period already under way as now, including one that started earlier', () => {
+    const today = '2024-01-27';
+    const next = findNextSharedPeriod(twoTwo, weekdays, today);
+    expect(next?.timing).toBe('current');
+    expect(next?.interval).toMatchObject({ start: '2024-01-27', end: '2024-01-28', days: 2 });
+    expect(formatPeriodRange('2024-01-27', '2024-01-28', today)).toBe('27–28 January');
+    expect(formatPeriodSpan('2024-01-27', '2024-01-28', 2)).toBe('2 days · Saturday–Sunday');
+    expect(nextPeriodKicker(next!, today)).toBe('You are both free now');
   });
 
-  it('classifies month edges and avoids an upcoming label on a past month', () => {
+  it('names a one-day period that is today', () => {
+    const bothToday: Schedule = { type: 'cycle', pattern: ['free', 'work'], anchor: '2024-05-04' };
+    const next = findNextSharedPeriod(bothToday, bothToday, '2024-05-04');
+    expect(next?.timing).toBe('current');
+    expect(next?.interval.days).toBe(1);
+    expect(nextPeriodKicker(next!, '2024-05-04')).toBe('You are both free today');
+  });
+
+  it('says when the forward search finds nothing, and includes a period on the last searched day', () => {
+    expect(findNextSharedPeriod(alwaysWork, weekdays, '2024-01-15')).toBeNull();
+    expect(horizonEmptyText()).toBe(`No shared free days in the next ${FORWARD_SEARCH_DAYS} days.`);
+
+    const onHorizon: Schedule = {
+      type: 'cycle',
+      pattern: [...Array.from({ length: FORWARD_SEARCH_DAYS }, () => 'work' as const), 'free'],
+      anchor: '2024-06-01',
+    };
+    const found = findNextSharedPeriod(onHorizon, onHorizon, '2024-06-01');
+    expect(found?.interval.start).toBe(addDays('2024-06-01', FORWARD_SEARCH_DAYS));
+    expect(found?.timing).toBe('upcoming');
+
+    const pastHorizon: Schedule = {
+      type: 'cycle',
+      pattern: [...Array.from({ length: FORWARD_SEARCH_DAYS + 1 }, () => 'work' as const), 'free'],
+      anchor: '2024-06-01',
+    };
+    expect(findNextSharedPeriod(pastHorizon, pastHorizon, '2024-06-01')).toBeNull();
+  });
+
+  it('formats a range that crosses a year', () => {
+    expect(formatPeriodRange('2025-12-31', '2026-01-02', '2025-12-20')).toBe(
+      '31 December 2025 – 2 January 2026',
+    );
+    expect(formatPeriodRange('2024-10-03', '2024-10-04', '2024-09-22')).toBe('3–4 October');
+  });
+});
+
+describe('selected month summary', () => {
+  it('counts shared days in the month without calling them the next period', () => {
+    const summary = summarizeSharedMonth(twoTwo, weekdays, '2024-01-01', '2024-01-31', '2024-02-02');
+    expect(summary.monthRelation).toBe('past');
+    expect(summary.sharedDayCount).toBe(4);
+    expect(summary.periodCount).toBe(3);
+    expect(monthCountText(summary, 'January 2024')).toBe(
+      '4 shared days in January 2024 · 3 periods · already passed',
+    );
+  });
+
+  it('describes an empty month without inventing a date', () => {
+    const summary = summarizeSharedMonth(alwaysWork, weekdays, '2024-03-01', '2024-03-31', '2024-03-10');
+    expect(summary.sharedDayCount).toBe(0);
+    expect(summary.intervals).toEqual([]);
+    expect(monthCountText(summary, 'March 2024')).toBe('No shared days in March 2024.');
+  });
+
+  it('classifies month edges and period timing against today', () => {
     expect(monthRelation('2024-01-01', '2024-01-31', '2024-01-01')).toBe('current');
     expect(monthRelation('2024-01-01', '2024-01-31', '2024-01-31')).toBe('current');
     expect(monthRelation('2024-01-01', '2024-01-31', '2024-02-01')).toBe('past');
     expect(monthRelation('2024-01-01', '2024-01-31', '2023-12-31')).toBe('future');
-    expect(periodStatusLabel('upcoming', 'past')).toBe('Extends beyond this month');
-    expect(periodStatusLabel('past', 'current')).toBe('Passed');
-    expect(periodStatusLabel('current', 'current')).toBe('Includes today');
-    expect(periodStatusLabel('upcoming', 'future')).toBe('Upcoming');
+    expect(periodStatusLabel('past')).toBe('Past');
+    expect(periodStatusLabel('current')).toBe('Now');
+    expect(periodStatusLabel('upcoming')).toBe('Upcoming');
   });
 });
