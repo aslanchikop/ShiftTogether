@@ -1,4 +1,5 @@
-import { daysInMonth, formatIsoDate, MONTH_NAMES, parseIsoDate } from '../calendar';
+import { daysInMonth, formatIsoDate, parseIsoDate } from '../calendar';
+import { useI18n } from '../i18n/LocaleProvider';
 
 interface CivilDateFieldProps {
   value: string;
@@ -7,6 +8,7 @@ interface CivilDateFieldProps {
 }
 
 export function CivilDateField({ value, labelId, onChange }: CivilDateFieldProps) {
+  const { messages } = useI18n();
   const parts = parseIsoDate(value);
 
   const commit = (year: number, month: number, day: number) => {
@@ -19,7 +21,7 @@ export function CivilDateField({ value, labelId, onChange }: CivilDateFieldProps
       <label>
         <span className="sr-only">Day</span>
         <select
-          aria-label="Anchor day"
+          aria-label={messages.schedules.anchorDay}
           value={parts.day}
           onChange={(event) => commit(parts.year, parts.month, Number(event.target.value))}
         >
@@ -33,11 +35,11 @@ export function CivilDateField({ value, labelId, onChange }: CivilDateFieldProps
       <label>
         <span className="sr-only">Month</span>
         <select
-          aria-label="Anchor month"
+          aria-label={messages.schedules.anchorMonth}
           value={parts.month}
           onChange={(event) => commit(parts.year, Number(event.target.value), parts.day)}
         >
-          {MONTH_NAMES.map((name, index) => (
+          {messages.months.map((name, index) => (
             <option key={name} value={index + 1}>
               {name}
             </option>
@@ -47,7 +49,7 @@ export function CivilDateField({ value, labelId, onChange }: CivilDateFieldProps
       <label>
         <span className="sr-only">Year</span>
         <input
-          aria-label="Anchor year"
+          aria-label={messages.schedules.anchorYear}
           type="number"
           min={1}
           max={9999}

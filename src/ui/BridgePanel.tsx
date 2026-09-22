@@ -1,7 +1,6 @@
-import { formatLongDate } from '../calendar';
-import type { BridgeExplanation, BridgeRecommendation } from '../schedules/bridge';
-import { BRIDGE_SEARCH_DAYS } from '../schedules/bridge';
-import { formatPeriodRange } from '../schedules/summary';
+import { bridgeCardCopy, bridgeEmpty, bridgeIntro } from '../i18n/format';
+import { useI18n } from '../i18n/LocaleProvider';
+import type { BridgeRecommendation } from '../schedules/bridge';
 
 interface BridgePanelProps {
   recommendations: BridgeRecommendation[];
@@ -11,61 +10,34 @@ interface BridgePanelProps {
   onInspect: (date: string) => void;
 }
 
-function improvement(item: BridgeRecommendation): string {
-  const gained = item.additionalSharedDays === 1 ? '1 additional shared day' : `${item.additionalSharedDays} additional shared days`;
-  if (item.explanation === 'joined-two-periods') {
-    return `Joins separate breaks into ${item.resulting.days} days together. ${gained}.`;
-  }
-  if (item.explanation === 'created-period') {
-    return item.resulting.days === 1
-      ? `Creates a shared day that does not exist now. ${gained}.`
-      : `Creates ${item.resulting.days} days together. ${gained}.`;
-  }
-  const before = item.baselineLongestDays;
-  const beforeLabel = before === 1 ? '1 day' : `${before} days`;
-  return `Extends ${beforeLabel} together to ${item.resulting.days} days. ${gained}.`;
-}
-
-function effectLabel(effect: BridgeExplanation): string {
-  if (effect === 'joined-two-periods') return 'Joins two breaks';
-  if (effect === 'created-period') return 'New time together';
-  return 'Longer break';
-}
-
 export function BridgePanel({ recommendations, nameA, nameB, today, onInspect }: BridgePanelProps) {
+  const { locale, messages } = useI18n();
+
   return (
     <section className="bridge" aria-labelledby="bridge-heading">
       <div className="section-head">
-        <h2 id="bridge-heading">One day off</h2>
-        <p>
-          Could one extra day off in the next {BRIDGE_SEARCH_DAYS} days make a longer stretch together? These ideas are
-          not saved, and they are not approved leave.
-        </p>
+        <h2 id="bridge-heading">{messages.bridge.heading}</h2>
+        <p>{bridgeIntro(locale)}</p>
       </div>
       {recommendations.length === 0 ? (
-        <p className="bridge-empty">
-          No single day off in the next {BRIDGE_SEARCH_DAYS} days would give you more time together than you already
-          have.
-        </p>
+        <p className="bridge-empty">{bridgeEmpty(locale)}</p>
       ) : (
         <ul className="bridge-list">
           {recommendations.map((item) => {
             const name = item.person === 'a' ? nameA : nameB;
+            const card = bridgeCardCopy(item, name, today, locale);
             return (
               <li key={`${item.person}:${item.date}`}>
-                <article className="bridge-card">
-                  <p className="bridge-effect">{effectLabel(item.explanation)}</p>
-                  <h3>
-                    {name} takes {formatLongDate(item.date)} off
-                  </h3>
-                  <p className="bridge-result">
-                    Together {formatPeriodRange(item.resulting.start, item.resulting.end, today)}
+                <article className={`bridge-card bridge-${card.kind}`}>
+                  <p className="bridge-effect">{card.effect}</p>
+                  <h3>{card.title}</h3>
+                  <p className="bridge-result">{card.range}</p>
+                  <p className="bridge-facts">
+                    <span>{card.total}</span>
+                    <span className="bridge-gain">{card.gained}</span>
                   </p>
-                  <p className="bridge-meta">
-                    {item.resulting.days} {item.resulting.days === 1 ? 'day' : 'days'} together. {improvement(item)}
-                  </p>
-                  <button type="button" onClick={() => onInspect(item.date)}>
-                    Show on calendar
+                  <button type="button" aria-label={messages.bridge.inspectLabel} onClick={() => onInspect(item.date)}>
+                    {messages.bridge.inspect}
                   </button>
                 </article>
               </li>

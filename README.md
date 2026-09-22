@@ -56,6 +56,8 @@ tests/            engine and state tests
 
 React renders the month. It does not decide whether a day is free. Change schedule behaviour in `src/calendar/` and cover it in `tests/`.
 
+The interface can be shown in Kazakh, Russian, or English. The switcher in the header is labeled Қазақша, Русский, and English. The choice is stored separately from the schedules, under `shifttogether.language`, and it does not change names, cycles, or the month you are viewing.
+
 The current pair of schedules is stored in `localStorage` under `shifttogether.v1`. Reset example restores the 2/2 and Monday–Friday demo. The month controls cover 1900 through 2200. Anchor dates can sit outside that window; the cycle still lines up.
 
 ## Not in this version

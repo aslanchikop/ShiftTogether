@@ -1,4 +1,6 @@
-import { buildMonthGrid, dayStatus, formatLongDate, MONTH_NAMES, WEEKDAY_SHORT, type DayKind } from '../calendar';
+import { buildMonthGrid, dayStatus, type DayKind } from '../calendar';
+import { fill, formatCivilDate } from '../i18n/format';
+import { useI18n } from '../i18n/LocaleProvider';
 import type { PersonConfig } from '../schedules/types';
 
 interface MonthCalendarProps {
@@ -30,11 +32,18 @@ function cellStatus(a: DayKind, b: DayKind): CellStatus {
   return 'working';
 }
 
-function describe(status: CellStatus, nameA: string, nameB: string): string {
-  if (status === 'shared') return 'both free';
-  if (status === 'free-a') return `${nameA} free, ${nameB} working`;
-  if (status === 'free-b') return `${nameB} free, ${nameA} working`;
-  return 'both working';
+function describe(
+  status: CellStatus,
+  nameA: string,
+  nameB: string,
+  bothFree: string,
+  bothWorking: string,
+  freeName: string,
+): string {
+  if (status === 'shared') return bothFree;
+  if (status === 'free-a') return fill(freeName, { name: nameA, other: nameB });
+  if (status === 'free-b') return fill(freeName, { name: nameB, other: nameA });
+  return bothWorking;
 }
 
 export function MonthCalendar({
@@ -51,8 +60,9 @@ export function MonthCalendar({
   maxYear,
   markedDate = null,
 }: MonthCalendarProps) {
-  const nameA = displayName(personA.name, 'Person A');
-  const nameB = displayName(personB.name, 'Person B');
+  const { locale, messages } = useI18n();
+  const nameA = displayName(personA.name, messages.schedules.fallbackA);
+  const nameB = displayName(personB.name, messages.schedules.fallbackB);
   const cells = buildMonthGrid(year, month);
   const weeks: (typeof cells)[] = [];
   for (let index = 0; index < cells.length; index += 7) {
@@ -64,14 +74,14 @@ export function MonthCalendar({
   return (
     <div className="calendar-wrap">
       <div className="calendar-head">
-        <button type="button" aria-label="Previous month" onClick={onPrevious} disabled={atStart}>
-          Previous
+        <button type="button" aria-label={messages.calendar.previous} onClick={onPrevious} disabled={atStart}>
+          {messages.calendar.previous}
         </button>
         <div className="month-pick">
           <label>
-            <span className="sr-only">Month</span>
-            <select aria-label="Month" value={month} onChange={(event) => onSelectMonth(Number(event.target.value))}>
-              {MONTH_NAMES.map((name, index) => (
+            <span className="sr-only">{messages.calendar.month}</span>
+            <select aria-label={messages.calendar.month} value={month} onChange={(event) => onSelectMonth(Number(event.target.value))}>
+              {messages.months.map((name, index) => (
                 <option key={name} value={index + 1}>
                   {name}
                 </option>
@@ -79,9 +89,9 @@ export function MonthCalendar({
             </select>
           </label>
           <label>
-            <span className="sr-only">Year</span>
+            <span className="sr-only">{messages.calendar.year}</span>
             <input
-              aria-label="Year"
+              aria-label={messages.calendar.year}
               type="number"
               min={minYear}
               max={maxYear}
@@ -94,17 +104,17 @@ export function MonthCalendar({
             />
           </label>
         </div>
-        <button type="button" aria-label="Next month" onClick={onNext} disabled={atEnd}>
-          Next
+        <button type="button" aria-label={messages.calendar.next} onClick={onNext} disabled={atEnd}>
+          {messages.calendar.next}
         </button>
       </div>
       <table className="calendar">
         <caption className="sr-only">
-          {MONTH_NAMES[month - 1]} {year}. {nameA} and {nameB}.
+          {fill(messages.calendar.caption, { month: messages.months[month - 1] ?? '', year, nameA, nameB })}
         </caption>
         <thead>
           <tr>
-            {WEEKDAY_SHORT.map((label) => (
+            {messages.weekdaysShort.map((label) => (
               <th key={label} scope="col">
                 {label}
               </th>
@@ -120,11 +130,17 @@ export function MonthCalendar({
                 const status = cellStatus(statusA, statusB);
                 const dayNumber = Number(cell.date.slice(8, 10));
                 const label =
-                  status === 'shared' ? 'Both' : status === 'free-a' ? 'A' : status === 'free-b' ? 'B' : 'Work';
-                const todayText = cell.date === today ? ' Today.' : '';
-                const outsideText = cell.inMonth ? '' : ' Outside this month.';
+                  status === 'shared'
+                    ? messages.calendar.both
+                    : status === 'free-a'
+                      ? messages.calendar.personA
+                      : status === 'free-b'
+                        ? messages.calendar.personB
+                        : messages.calendar.work;
+                const todayText = cell.date === today ? ` ${messages.calendar.today}` : '';
+                const outsideText = cell.inMonth ? '' : ` ${messages.calendar.outside}`;
                 const marked = cell.date === markedDate;
-                const markedText = marked ? ' Suggested day off. The schedule is unchanged.' : '';
+                const markedText = marked ? ` ${messages.calendar.suggest}` : '';
                 return (
                   <td
                     key={cell.date}
@@ -133,7 +149,7 @@ export function MonthCalendar({
                     data-outside={cell.inMonth ? 'false' : 'true'}
                     data-today={cell.date === today ? 'true' : 'false'}
                     data-suggest={marked ? 'true' : 'false'}
-                    aria-label={`${formatLongDate(cell.date)}: ${describe(status, nameA, nameB)}.${todayText}${outsideText}${markedText}`}
+                    aria-label={`${formatCivilDate(cell.date, locale)}: ${describe(status, nameA, nameB, messages.calendar.bothFree, messages.calendar.bothWorking, messages.calendar.freeName)}.${todayText}${outsideText}${markedText}`}
                   >
                     <span className="num">{dayNumber}</span>
                     <span className={status === 'working' ? 'tag quiet' : 'tag'}>{label}</span>
@@ -146,16 +162,16 @@ export function MonthCalendar({
       </table>
       <ul className="legend">
         <li data-status="shared">
-          <span className="swatch" /> Both free
+          <span className="swatch" /> {messages.calendar.legendBoth}
         </li>
         <li data-status="free-a">
-          <span className="swatch" /> A · only {nameA} free
+          <span className="swatch" /> {fill(messages.calendar.legendA, { name: nameA })}
         </li>
         <li data-status="free-b">
-          <span className="swatch" /> B · only {nameB} free
+          <span className="swatch" /> {fill(messages.calendar.legendB, { name: nameB })}
         </li>
         <li data-status="working">
-          <span className="swatch" /> Work · both working
+          <span className="swatch" /> {messages.calendar.legendWork}
         </li>
       </ul>
     </div>

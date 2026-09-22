@@ -1,13 +1,14 @@
 import { compareIso, parseIsoDate } from '../calendar';
 import {
-  formatPeriodRange,
+  fill,
+  formatMonthCount,
   formatPeriodSpan,
-  horizonEmptyText,
-  monthCountText,
-  nextPeriodKicker,
-  type NextSharedPeriod,
-  type SharedMonthSummary,
-} from '../schedules/summary';
+  formatRange,
+  heroKicker,
+  horizonEmpty,
+} from '../i18n/format';
+import { useI18n } from '../i18n/LocaleProvider';
+import type { NextSharedPeriod, SharedMonthSummary } from '../schedules/summary';
 
 interface NextTogetherProps {
   next: NextSharedPeriod | null;
@@ -28,39 +29,36 @@ export function NextTogether({
   today,
   onShowPeriod,
 }: NextTogetherProps) {
-  const monthLine = monthCountText(summary, monthLabel);
+  const { locale, messages } = useI18n();
+  const monthLine = formatMonthCount(summary, monthLabel, locale);
 
   if (!next) {
     return (
       <section className="hero hero-empty" id="next-together" aria-labelledby="next-heading">
         <p className="kicker" id="next-heading">
-          Your next days together
+          {messages.hero.next}
         </p>
-        <p className="hero-empty-copy">{horizonEmptyText()}</p>
+        <p className="hero-empty-copy">{horizonEmpty(locale)}</p>
         <p className="hero-month">{monthLine}</p>
       </section>
     );
   }
 
-  const { interval, timing } = next;
+  const { interval } = next;
   const overlapsMonth = compareIso(interval.end, monthStart) >= 0 && compareIso(interval.start, monthEnd) <= 0;
   const start = parseIsoDate(interval.start);
 
   return (
-    <section className={`hero hero-${timing}`} id="next-together" aria-labelledby="next-heading">
+    <section className={`hero hero-${next.timing}`} id="next-together" aria-labelledby="next-heading">
       <p className="kicker" id="next-heading">
-        {nextPeriodKicker(next, today)}
+        {heroKicker(next, today, locale)}
       </p>
-      <p className="hero-date">{formatPeriodRange(interval.start, interval.end, today)}</p>
-      <p className="hero-span">{formatPeriodSpan(interval.start, interval.end, interval.days)}</p>
+      <p className="hero-date">{formatRange(interval.start, interval.end, today, locale)}</p>
+      <p className="hero-span">{formatPeriodSpan(interval.start, interval.end, interval.days, locale)}</p>
       <p className="hero-month">{monthLine}</p>
       {overlapsMonth ? null : (
-        <button
-          type="button"
-          className="text-button"
-          onClick={() => onShowPeriod(start.year, start.month)}
-        >
-          Show {formatPeriodRange(interval.start, interval.start, today)} on the calendar
+        <button type="button" className="text-button" onClick={() => onShowPeriod(start.year, start.month)}>
+          {fill(messages.hero.showDate, { date: formatRange(interval.start, interval.start, today, locale) })}
         </button>
       )}
     </section>

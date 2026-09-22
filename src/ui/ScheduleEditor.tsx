@@ -1,19 +1,13 @@
 import { useRef } from 'react';
 import { dayStatus, type DayKind, type Schedule } from '../calendar';
-import { PRESET_OPTIONS, patternForPreset, presetIdForPattern, type PresetId } from '../schedules/presets';
+import { fill } from '../i18n/format';
+import { useI18n } from '../i18n/LocaleProvider';
+import { patternForPreset, presetIdForPattern, type PresetId } from '../schedules/presets';
 import type { PersonConfig } from '../schedules/types';
 import { CivilDateField } from './CivilDateField';
 import { localCivilToday } from './today';
 
-const WEEKDAY_TOGGLES: { day: number; label: string }[] = [
-  { day: 1, label: 'Mon' },
-  { day: 2, label: 'Tue' },
-  { day: 3, label: 'Wed' },
-  { day: 4, label: 'Thu' },
-  { day: 5, label: 'Fri' },
-  { day: 6, label: 'Sat' },
-  { day: 7, label: 'Sun' },
-];
+const WEEKDAY_INDEXES = [1, 2, 3, 4, 5, 6, 7];
 
 const MAX_PATTERN = 56;
 
@@ -36,6 +30,7 @@ function presetOf(schedule: Schedule): PresetId {
 }
 
 export function ScheduleEditor({ headingId, fallbackName, person, today, onChange }: ScheduleEditorProps) {
+  const { messages } = useI18n();
   const schedule = person.schedule;
   const lastAnchor = useRef(schedule.type === 'cycle' ? schedule.anchor : today);
   if (schedule.type === 'cycle') lastAnchor.current = schedule.anchor;
@@ -66,7 +61,7 @@ export function ScheduleEditor({ headingId, fallbackName, person, today, onChang
       <h2 id={headingId}>{shownName}</h2>
       <div className="field-grid">
         <label className="field">
-          <span>Name</span>
+          <span>{messages.schedules.name}</span>
           <input
             value={person.name}
             maxLength={40}
@@ -74,11 +69,11 @@ export function ScheduleEditor({ headingId, fallbackName, person, today, onChang
           />
         </label>
         <label className="field">
-          <span>Schedule</span>
+          <span>{messages.schedules.schedule}</span>
           <select value={preset} onChange={(event) => selectPreset(event.target.value as PresetId)}>
-            {PRESET_OPTIONS.map((option) => (
-              <option key={option.id} value={option.id}>
-                {option.label}
+            {(Object.keys(messages.schedules.presets) as PresetId[]).map((id) => (
+              <option key={id} value={id}>
+                {messages.schedules.presets[id]}
               </option>
             ))}
           </select>
@@ -88,7 +83,7 @@ export function ScheduleEditor({ headingId, fallbackName, person, today, onChang
       {schedule.type === 'cycle' ? (
         <>
           <div className="field">
-            <span id={`${headingId}-anchor`}>Anchor date</span>
+            <span id={`${headingId}-anchor`}>{messages.schedules.anchor}</span>
             <CivilDateField
               labelId={`${headingId}-anchor`}
               value={schedule.anchor}
@@ -96,8 +91,10 @@ export function ScheduleEditor({ headingId, fallbackName, person, today, onChang
             />
           </div>
           <p className="hint">
-            Day 1 of the cycle is this anchor. Dates before it keep stepping backward through the same pattern. On
-            the anchor, {shownName} is {dayStatus(schedule, schedule.anchor)}.
+            {fill(messages.schedules.anchorHint, {
+              name: shownName,
+              status: dayStatus(schedule, schedule.anchor) === 'work' ? messages.schedules.work : messages.schedules.free,
+            })}
           </p>
           <ul className="pattern">
             {schedule.pattern.map((kind, index) => (
@@ -114,11 +111,17 @@ export function ScheduleEditor({ headingId, fallbackName, person, today, onChang
                       updateSchedule({ ...schedule, pattern });
                     }}
                   >
-                    Day {index + 1}: {kind === 'work' ? 'Work' : 'Free'}
+                    {fill(messages.schedules.day, {
+                      n: index + 1,
+                      status: kind === 'work' ? messages.schedules.work : messages.schedules.free,
+                    })}
                   </button>
                 ) : (
                   <span className={`chip ${kind}`}>
-                    Day {index + 1}: {kind === 'work' ? 'Work' : 'Free'}
+                    {fill(messages.schedules.day, {
+                      n: index + 1,
+                      status: kind === 'work' ? messages.schedules.work : messages.schedules.free,
+                    })}
                   </span>
                 )}
               </li>
@@ -134,7 +137,7 @@ export function ScheduleEditor({ headingId, fallbackName, person, today, onChang
                 }}
                 disabled={schedule.pattern.length >= MAX_PATTERN}
               >
-                Add day
+                {messages.schedules.add}
               </button>
               <button
                 type="button"
@@ -144,32 +147,32 @@ export function ScheduleEditor({ headingId, fallbackName, person, today, onChang
                 }}
                 disabled={schedule.pattern.length <= 1}
               >
-                Remove last day
+                {messages.schedules.remove}
               </button>
             </div>
           ) : null}
         </>
       ) : (
         <>
-          <p className="hint">Choose the days {shownName} works. Every other day is free. This schedule has no anchor.</p>
+          <p className="hint">{fill(messages.schedules.weekdayHint, { name: shownName })}</p>
           <ul className="pattern weekdays">
-            {WEEKDAY_TOGGLES.map((weekday) => {
-              const pressed = schedule.workdays.includes(weekday.day);
+            {WEEKDAY_INDEXES.map((day) => {
+              const pressed = schedule.workdays.includes(day);
               return (
-                <li key={weekday.day}>
+                <li key={day}>
                   <button
                     type="button"
                     className={`chip day-toggle ${pressed ? 'work' : 'free'}`}
                     aria-pressed={pressed}
                     onClick={() => {
                       const workdays = pressed
-                        ? schedule.workdays.filter((day) => day !== weekday.day)
-                        : [...schedule.workdays, weekday.day].sort((a, b) => a - b);
+                        ? schedule.workdays.filter((item) => item !== day)
+                        : [...schedule.workdays, day].sort((a, b) => a - b);
                       updateSchedule({ type: 'weekdays', workdays });
                     }}
                   >
-                    <span className="toggle-day">{weekday.label}</span>
-                    <span className="toggle-kind">{pressed ? 'Work' : 'Free'}</span>
+                    <span className="toggle-day">{messages.weekdaysShort[day - 1]}</span>
+                    <span className="toggle-kind">{pressed ? messages.calendar.work : messages.schedules.free}</span>
                   </button>
                 </li>
               );

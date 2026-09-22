@@ -107,6 +107,32 @@ h2 {
   background: transparent;
 }
 
+.top-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.lang-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.lang-switch button {
+  min-height: 2.5rem;
+  padding: 0.3rem 0.65rem;
+  background: transparent;
+}
+
+.lang-switch button[aria-pressed="true"] {
+  background: var(--ink);
+  color: #fff;
+  border-color: var(--ink);
+}
+
 .views {
   display: flex;
   gap: 0.45rem;
@@ -135,18 +161,22 @@ h2 {
 }
 
 .bridge-card {
-  padding: 0.9rem 1rem 1rem;
-  border-radius: 16px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.1rem 0.75rem;
+  align-items: center;
+  padding: 0.65rem 0.75rem;
+  border-radius: 14px;
   background: var(--hero);
 }
 
 .bridge-card h3 {
-  margin: 0.15rem 0 0.35rem;
+  margin: 0;
   font-family: var(--serif);
-  font-size: 1.35rem;
+  font-size: 1.08rem;
   font-weight: 600;
   letter-spacing: -0.02em;
-  line-height: 1.2;
+  line-height: 1.25;
 }
 
 .bridge-effect {
@@ -158,12 +188,33 @@ h2 {
   text-transform: uppercase;
 }
 
-.bridge-result {
+.bridge-result,
+.bridge-facts {
   margin: 0;
-  font-weight: 600;
 }
 
-.bridge-meta,
+.bridge-result { font-weight: 600; }
+
+.bridge-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.bridge-gain {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.bridge-card button {
+  grid-column: 2;
+  grid-row: 1 / span 4;
+  align-self: center;
+  background: #fff;
+}
+
 .bridge-empty,
 .suggest-note {
   margin: 0.35rem 0 0.7rem;
@@ -172,8 +223,6 @@ h2 {
 }
 
 .bridge-empty { margin-top: 0.8rem; }
-
-.bridge-card button { background: #fff; }
 
 .suggest-note { margin: 0 0 0.6rem; }
 
@@ -500,7 +549,7 @@ footer p {
 
 .field-grid {
   display: grid;
-  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  grid-template-columns: 1fr;
   gap: 0.55rem;
   margin-bottom: 0.55rem;
 }
@@ -633,6 +682,12 @@ footer {
   .hero { padding: 1.1rem 1rem 1rem; }
   .hero-date { font-size: 2.45rem; }
   .top { align-items: stretch; flex-direction: column; }
+  .top-actions,
+  .lang-switch { justify-content: stretch; width: 100%; }
+  .lang-switch button,
+  .reset { flex: 1; }
+  .bridge-card { grid-template-columns: 1fr; }
+  .bridge-card button { grid-column: 1; grid-row: auto; justify-self: start; }
   .field-grid { grid-template-columns: 1fr; }
   .calendar { border-spacing: 3px; }
   .calendar td { height: 3.7rem; border-radius: 9px; }

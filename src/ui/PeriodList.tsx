@@ -1,11 +1,8 @@
-import {
-  formatPeriodRange,
-  formatWeekdaySpan,
-  periodStatusLabel,
-  periodTiming,
-  type MonthRelation,
-} from '../schedules/summary';
 import type { DateInterval } from '../calendar';
+import { fill, formatRange, formatWeekdaySpan, periodStateLabel } from '../i18n/format';
+import { quantity } from '../i18n/plural';
+import { useI18n } from '../i18n/LocaleProvider';
+import { periodTiming, type MonthRelation } from '../schedules/summary';
 
 interface PeriodListProps {
   intervals: DateInterval[];
@@ -15,14 +12,16 @@ interface PeriodListProps {
 }
 
 export function PeriodList({ intervals, monthLabel, monthRelation, today }: PeriodListProps) {
+  const { locale, messages } = useI18n();
+
   return (
     <section className="periods" aria-labelledby="periods-heading">
       <div className="section-head">
-        <h2 id="periods-heading">This month</h2>
-        <p>{monthRelation === 'past' ? `${monthLabel} has passed` : monthLabel}</p>
+        <h2 id="periods-heading">{messages.periods.heading}</h2>
+        <p>{monthRelation === 'past' ? fill(messages.periods.passed, { month: monthLabel }) : monthLabel}</p>
       </div>
       {intervals.length === 0 ? (
-        <p className="quiet">No shared free days in {monthLabel}.</p>
+        <p className="quiet">{fill(messages.periods.empty, { month: monthLabel })}</p>
       ) : (
         <ul className="period-list">
           {intervals.map((interval) => {
@@ -33,12 +32,12 @@ export function PeriodList({ intervals, monthLabel, monthRelation, today }: Peri
                 key={`${interval.start}:${interval.end}`}
                 className={`period ${several ? 'period-several' : 'period-one'} timing-${timing}`}
               >
-                <span className="period-length">{interval.days === 1 ? '1 day' : `${interval.days} days`}</span>
+                <span className="period-length">{quantity(locale, interval.days, messages.quantity.day)}</span>
                 <span className="period-copy">
-                  <span className="period-range">{formatPeriodRange(interval.start, interval.end, today)}</span>
-                  <span className="period-span">{formatWeekdaySpan(interval.start, interval.end)}</span>
+                  <span className="period-range">{formatRange(interval.start, interval.end, today, locale)}</span>
+                  <span className="period-span">{formatWeekdaySpan(interval.start, interval.end, locale)}</span>
                 </span>
-                <span className="period-state">{periodStatusLabel(timing)}</span>
+                <span className="period-state">{periodStateLabel(timing, locale)}</span>
               </li>
             );
           })}

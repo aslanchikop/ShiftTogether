@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
-import { MONTH_NAMES, daysInMonth, formatIsoDate, parseIsoDate, shiftMonth } from '../calendar';
+import { daysInMonth, formatIsoDate, parseIsoDate, shiftMonth } from '../calendar';
+import { LOCALE_NAMES, LOCALES } from '../i18n/types';
+import { monthTitle } from '../i18n/format';
+import { useI18n } from '../i18n/LocaleProvider';
 import { findBridgeRecommendations } from '../schedules/bridge';
 import { createDemoPeople } from '../schedules/demo';
 import { loadAppState, saveAppState } from '../schedules/state';
@@ -42,6 +45,7 @@ function displayName(name: string, fallback: string): string {
 }
 
 export function App() {
+  const { locale, messages, setLocale } = useI18n();
   const [today] = useState(localCivilToday);
   const [state, setState] = useState<AppState>(() => createInitialState(today));
   const [view, setView] = useState<'find' | 'make'>('find');
@@ -66,9 +70,9 @@ export function App() {
   );
   const next = findNextSharedPeriod(state.personA.schedule, state.personB.schedule, today);
   const bridges = findBridgeRecommendations(state.personA.schedule, state.personB.schedule, today);
-  const monthLabel = `${MONTH_NAMES[state.month - 1]} ${state.year}`;
-  const nameA = displayName(state.personA.name, 'Person A');
-  const nameB = displayName(state.personB.name, 'Person B');
+  const monthLabel = monthTitle(state.year, state.month, locale);
+  const nameA = displayName(state.personA.name, messages.schedules.fallbackA);
+  const nameB = displayName(state.personB.name, messages.schedules.fallbackB);
 
   const moveMonth = (delta: number) => {
     const shifted = shiftMonth(state.year, state.month, delta);
@@ -106,19 +110,34 @@ export function App() {
       <header className="top">
         <div>
           <p className="eyebrow">ShiftTogether</p>
-          <h1>When are you both free?</h1>
+          <h1>{messages.app.title}</h1>
         </div>
-        <button type="button" className="reset" onClick={resetDemo}>
-          Reset example
-        </button>
+        <div className="top-actions">
+          <div className="lang-switch" role="group" aria-label={messages.app.language}>
+            {LOCALES.map((code) => (
+              <button
+                key={code}
+                type="button"
+                data-lang={code}
+                aria-pressed={locale === code}
+                onClick={() => setLocale(code)}
+              >
+                {LOCALE_NAMES[code]}
+              </button>
+            ))}
+          </div>
+          <button type="button" className="reset" onClick={resetDemo}>
+            {messages.app.reset}
+          </button>
+        </div>
       </header>
 
-      <div className="views" role="tablist" aria-label="What to look at">
+      <div className="views" role="tablist" aria-label={messages.views.group}>
         <button type="button" role="tab" aria-selected={view === 'find'} onClick={() => setView('find')}>
-          Find time
+          {messages.views.find}
         </button>
         <button type="button" role="tab" aria-selected={view === 'make'} onClick={() => setView('make')}>
-          Make time
+          {messages.views.make}
         </button>
       </div>
 
@@ -145,7 +164,7 @@ export function App() {
           )}
           <section className="calendar-panel" id="shared-calendar" aria-label={`${monthLabel} calendar`}>
             {markedDate ? (
-              <p className="suggest-note">The dashed day is a hypothetical day off. The saved schedules are unchanged.</p>
+              <p className="suggest-note">{messages.calendar.suggestNote}</p>
             ) : null}
             <MonthCalendar
               year={state.year}
@@ -175,19 +194,19 @@ export function App() {
           ) : null}
           <section className="schedules" aria-labelledby="schedules-heading">
             <div className="section-head">
-              <h2 id="schedules-heading">Schedules</h2>
-              <p>A shared day is one when both people are free.</p>
+              <h2 id="schedules-heading">{messages.schedules.heading}</h2>
+              <p>{messages.schedules.intro}</p>
             </div>
             <ScheduleEditor
               headingId="person-a-heading"
-              fallbackName="Person A"
+              fallbackName={messages.schedules.fallbackA}
               person={state.personA}
               today={today}
               onChange={(person) => setPerson('personA', person)}
             />
             <ScheduleEditor
               headingId="person-b-heading"
-              fallbackName="Person B"
+              fallbackName={messages.schedules.fallbackB}
               person={state.personB}
               today={today}
               onChange={(person) => setPerson('personB', person)}
@@ -197,7 +216,7 @@ export function App() {
       </div>
 
       <footer>
-        <p>Calculations stay in this browser. ShiftTogether is free software.</p>
+        <p>{messages.app.footer}</p>
       </footer>
     </div>
   );
