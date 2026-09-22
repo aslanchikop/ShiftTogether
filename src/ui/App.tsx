@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { MONTH_NAMES, daysInMonth, formatIsoDate, parseIsoDate, shiftMonth } from '../calendar';
+import { findBridgeRecommendations } from '../schedules/bridge';
 import { createDemoPeople } from '../schedules/demo';
 import { loadAppState, saveAppState } from '../schedules/state';
 import { findNextSharedPeriod, summarizeSharedMonth } from '../schedules/summary';
 import type { AppState, PersonConfig } from '../schedules/types';
+import { BridgePanel } from './BridgePanel';
 import { MonthCalendar } from './MonthCalendar';
 import { NextTogether } from './NextTogether';
 import { PeriodList } from './PeriodList';
@@ -34,9 +36,16 @@ function createInitialState(today: string): AppState {
   return { ...createDemoPeople(today), ...month };
 }
 
+function displayName(name: string, fallback: string): string {
+  const trimmed = name.trim();
+  return trimmed.length > 0 ? trimmed : fallback;
+}
+
 export function App() {
   const [today] = useState(localCivilToday);
   const [state, setState] = useState<AppState>(() => createInitialState(today));
+  const [view, setView] = useState<'find' | 'make'>('find');
+  const [markedDate, setMarkedDate] = useState<string | null>(null);
 
   useEffect(() => {
     saveAppState(state);
@@ -56,7 +65,10 @@ export function App() {
     today,
   );
   const next = findNextSharedPeriod(state.personA.schedule, state.personB.schedule, today);
+  const bridges = findBridgeRecommendations(state.personA.schedule, state.personB.schedule, today);
   const monthLabel = `${MONTH_NAMES[state.month - 1]} ${state.year}`;
+  const nameA = displayName(state.personA.name, 'Person A');
+  const nameB = displayName(state.personB.name, 'Person B');
 
   const moveMonth = (delta: number) => {
     const shifted = shiftMonth(state.year, state.month, delta);
@@ -71,11 +83,22 @@ export function App() {
 
   const resetDemo = () => {
     const currentToday = localCivilToday();
+    setMarkedDate(null);
+    setView('find');
     setState({ ...createDemoPeople(currentToday), ...viewMonth(0, 0, currentToday) });
   };
 
   const setPerson = (key: 'personA' | 'personB', person: PersonConfig) => {
+    setMarkedDate(null);
     setState((current) => ({ ...current, [key]: person }));
+  };
+
+  const inspectBridge = (date: string) => {
+    const parts = parseIsoDate(date);
+    showMonth(parts.year, parts.month);
+    setMarkedDate(date);
+    const motion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    document.getElementById('shared-calendar')?.scrollIntoView({ behavior: motion ? 'auto' : 'smooth', block: 'start' });
   };
 
   return (
@@ -90,24 +113,47 @@ export function App() {
         </button>
       </header>
 
+      <div className="views" role="tablist" aria-label="What to look at">
+        <button type="button" role="tab" aria-selected={view === 'find'} onClick={() => setView('find')}>
+          Find time
+        </button>
+        <button type="button" role="tab" aria-selected={view === 'make'} onClick={() => setView('make')}>
+          Make time
+        </button>
+      </div>
+
       <div className="workspace">
         <div className="primary">
-          <NextTogether
-            next={next}
-            summary={summary}
-            monthLabel={monthLabel}
-            monthStart={monthStart}
-            monthEnd={monthEnd}
-            today={today}
-            onShowPeriod={showMonth}
-          />
-          <section className="calendar-panel" aria-label={`${monthLabel} calendar`}>
+          {view === 'find' ? (
+            <NextTogether
+              next={next}
+              summary={summary}
+              monthLabel={monthLabel}
+              monthStart={monthStart}
+              monthEnd={monthEnd}
+              today={today}
+              onShowPeriod={showMonth}
+            />
+          ) : (
+            <BridgePanel
+              recommendations={bridges}
+              nameA={nameA}
+              nameB={nameB}
+              today={today}
+              onInspect={inspectBridge}
+            />
+          )}
+          <section className="calendar-panel" id="shared-calendar" aria-label={`${monthLabel} calendar`}>
+            {markedDate ? (
+              <p className="suggest-note">The dashed day is a hypothetical day off. The saved schedules are unchanged.</p>
+            ) : null}
             <MonthCalendar
               year={state.year}
               month={state.month}
               personA={state.personA}
               personB={state.personB}
               today={today}
+              markedDate={markedDate}
               minYear={MIN_VIEW_YEAR}
               maxYear={MAX_VIEW_YEAR}
               onPrevious={() => moveMonth(-1)}
@@ -119,12 +165,14 @@ export function App() {
         </div>
 
         <aside className="secondary">
-          <PeriodList
-            intervals={summary.intervals}
-            monthLabel={monthLabel}
-            monthRelation={summary.monthRelation}
-            today={today}
-          />
+          {view === 'find' ? (
+            <PeriodList
+              intervals={summary.intervals}
+              monthLabel={monthLabel}
+              monthRelation={summary.monthRelation}
+              today={today}
+            />
+          ) : null}
           <section className="schedules" aria-labelledby="schedules-heading">
             <div className="section-head">
               <h2 id="schedules-heading">Schedules</h2>

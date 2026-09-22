@@ -38,6 +38,8 @@ A date is shared free time when both people are free. Consecutive shared dates a
 
 The headline is the earliest shared period that includes today or starts later. The search looks 366 days ahead and says so when it finds nothing. It does not depend on the month shown in the calendar. The calendar still counts shared days in the month you are viewing, and marks those periods as now, upcoming, or past.
 
+Make time looks at the next 90 days, starting from today, for one hypothetical day off. A suggestion counts only when one person is working, the other is already free, and that single change lengthens a shared run or opens a new one. The saved schedules stay as they are. Leave is not approved by the suggestion.
+
 Leap days are ordinary civil days. In 2024, 29 February exists and the cycle advances across it. In 1900, which is not a leap year, 28 February is followed by 1 March. The weekday of a date comes from the civil serial, with 1 January 1970 fixed as Thursday.
 
 The only use of the system clock is choosing "today" for the first month and the demo anchor. That reading uses the local calendar year, month, and day.

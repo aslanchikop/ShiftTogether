@@ -13,6 +13,7 @@ interface MonthCalendarProps {
   onSelectYear: (year: number) => void;
   minYear: number;
   maxYear: number;
+  markedDate?: string | null;
 }
 
 type CellStatus = 'shared' | 'free-a' | 'free-b' | 'working';
@@ -48,6 +49,7 @@ export function MonthCalendar({
   onSelectYear,
   minYear,
   maxYear,
+  markedDate = null,
 }: MonthCalendarProps) {
   const nameA = displayName(personA.name, 'Person A');
   const nameB = displayName(personB.name, 'Person B');
@@ -121,6 +123,8 @@ export function MonthCalendar({
                   status === 'shared' ? 'Both' : status === 'free-a' ? 'A' : status === 'free-b' ? 'B' : 'Work';
                 const todayText = cell.date === today ? ' Today.' : '';
                 const outsideText = cell.inMonth ? '' : ' Outside this month.';
+                const marked = cell.date === markedDate;
+                const markedText = marked ? ' Suggested day off. The schedule is unchanged.' : '';
                 return (
                   <td
                     key={cell.date}
@@ -128,7 +132,8 @@ export function MonthCalendar({
                     data-status={status}
                     data-outside={cell.inMonth ? 'false' : 'true'}
                     data-today={cell.date === today ? 'true' : 'false'}
-                    aria-label={`${formatLongDate(cell.date)}: ${describe(status, nameA, nameB)}.${todayText}${outsideText}`}
+                    data-suggest={marked ? 'true' : 'false'}
+                    aria-label={`${formatLongDate(cell.date)}: ${describe(status, nameA, nameB)}.${todayText}${outsideText}${markedText}`}
                   >
                     <span className="num">{dayNumber}</span>
                     <span className={status === 'working' ? 'tag quiet' : 'tag'}>{label}</span>

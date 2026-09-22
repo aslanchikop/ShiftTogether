@@ -107,6 +107,81 @@ h2 {
   background: transparent;
 }
 
+.views {
+  display: flex;
+  gap: 0.45rem;
+  margin: -0.4rem 0 1.25rem;
+}
+
+.views button {
+  min-height: 2.75rem;
+  padding: 0.4rem 1rem;
+  background: transparent;
+}
+
+.views button[aria-selected="true"] {
+  background: var(--ink);
+  color: #fff;
+  border-color: var(--ink);
+}
+
+.bridge-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  margin: 0.9rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bridge-card {
+  padding: 0.9rem 1rem 1rem;
+  border-radius: 16px;
+  background: var(--hero);
+}
+
+.bridge-card h3 {
+  margin: 0.15rem 0 0.35rem;
+  font-family: var(--serif);
+  font-size: 1.35rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.bridge-effect {
+  margin: 0;
+  color: var(--accent);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.bridge-result {
+  margin: 0;
+  font-weight: 600;
+}
+
+.bridge-meta,
+.bridge-empty,
+.suggest-note {
+  margin: 0.35rem 0 0.7rem;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.bridge-empty { margin-top: 0.8rem; }
+
+.bridge-card button { background: #fff; }
+
+.suggest-note { margin: 0 0 0.6rem; }
+
+.calendar td[data-suggest="true"] {
+  outline: 2px dashed var(--accent);
+  outline-offset: -4px;
+}
+
 .workspace {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 22.5rem;
@@ -548,6 +623,7 @@ footer {
 
 @media (max-width: 720px) {
   .page { padding: 1.1rem 0.9rem 2rem; }
+  .views button { flex: 1; }
   .calendar-head { justify-content: stretch; }
   .month-pick { flex: 1 0 100%; order: -1; }
   .calendar-head > button { flex: 1; }
