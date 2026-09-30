@@ -59,9 +59,7 @@ describe('next shared period', () => {
     expect(next?.interval.start).toBe('2024-01-20');
     expect(next?.timing).toBe('upcoming');
     expect(formatPeriodRange(next!.interval.start, next!.interval.end, today)).toBe('20 January');
-    expect(formatPeriodSpan(next!.interval.start, next!.interval.end, next!.interval.days)).toBe(
-      '1 day · Saturday',
-    );
+    expect(formatPeriodSpan(next!.interval.start, next!.interval.end, next!.interval.days)).toBe('1 day · Saturday');
   });
 
   it('treats a period already under way as now, including one that started earlier', () => {
@@ -104,9 +102,7 @@ describe('next shared period', () => {
   });
 
   it('formats a range that crosses a year', () => {
-    expect(formatPeriodRange('2025-12-31', '2026-01-02', '2025-12-20')).toBe(
-      '31 December 2025 – 2 January 2026',
-    );
+    expect(formatPeriodRange('2025-12-31', '2026-01-02', '2025-12-20')).toBe('31 December 2025 – 2 January 2026');
     expect(formatPeriodRange('2024-10-03', '2024-10-04', '2024-09-22')).toBe('3–4 October');
   });
 });
@@ -117,9 +113,7 @@ describe('selected month summary', () => {
     expect(summary.monthRelation).toBe('past');
     expect(summary.sharedDayCount).toBe(4);
     expect(summary.periodCount).toBe(3);
-    expect(monthCountText(summary, 'January 2024')).toBe(
-      '4 shared days in January 2024 · 3 periods · already passed',
-    );
+    expect(monthCountText(summary, 'January 2024')).toBe('4 shared days in January 2024 · 3 periods · already passed');
   });
 
   it('describes an empty month without inventing a date', () => {

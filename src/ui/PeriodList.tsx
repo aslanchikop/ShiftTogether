@@ -1,7 +1,7 @@
 import type { DateInterval } from '../calendar';
 import { fill, formatRange, formatWeekdaySpan, periodStateLabel } from '../i18n/format';
 import { quantity } from '../i18n/plural';
-import { useI18n } from '../i18n/LocaleProvider';
+import { useI18n } from '../i18n/useI18n';
 import { periodTiming, type MonthRelation } from '../schedules/summary';
 
 interface PeriodListProps {

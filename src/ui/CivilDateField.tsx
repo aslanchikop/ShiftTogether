@@ -1,5 +1,5 @@
 import { daysInMonth, formatIsoDate, parseIsoDate } from '../calendar';
-import { useI18n } from '../i18n/LocaleProvider';
+import { useI18n } from '../i18n/useI18n';
 
 interface CivilDateFieldProps {
   value: string;

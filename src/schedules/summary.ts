@@ -56,11 +56,7 @@ export function periodStatusLabel(timing: PeriodTiming): string {
  * searching through today + FORWARD_SEARCH_DAYS.
  * The displayed month is not an input: changing it cannot move this result.
  */
-export function findNextSharedPeriod(
-  personA: Schedule,
-  personB: Schedule,
-  today: string,
-): NextSharedPeriod | null {
+export function findNextSharedPeriod(personA: Schedule, personB: Schedule, today: string): NextSharedPeriod | null {
   const horizonEnd = addDays(today, FORWARD_SEARCH_DAYS);
   const intervals = sharedFreeIntervals(personA, personB, today, horizonEnd);
   const candidate = intervals.find((interval) => compareIso(interval.end, today) >= 0);

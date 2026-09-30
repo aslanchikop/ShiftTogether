@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { addDays, compareIso, cycleIndex, dayStatus, type Schedule } from '../src/calendar';
-import {
-  BRIDGE_SEARCH_DAYS,
-  findBridgeRecommendations,
-  type BridgeRecommendation,
-} from '../src/schedules/bridge';
+import { BRIDGE_SEARCH_DAYS, findBridgeRecommendations, type BridgeRecommendation } from '../src/schedules/bridge';
 
 const alwaysFree: Schedule = { type: 'cycle', pattern: ['free'], anchor: '2024-01-01' };
 const alwaysWork: Schedule = { type: 'cycle', pattern: ['work'], anchor: '2024-01-01' };
@@ -71,7 +67,9 @@ describe('bridge finder', () => {
     expect(findBridgeRecommendations(outside, alwaysFree, start)).toEqual([]);
 
     const edge = cycle(
-      Array.from({ length: BRIDGE_SEARCH_DAYS + 1 }, (_, index) => (index === BRIDGE_SEARCH_DAYS - 1 ? 'work' : 'free')),
+      Array.from({ length: BRIDGE_SEARCH_DAYS + 1 }, (_, index) =>
+        index === BRIDGE_SEARCH_DAYS - 1 ? 'work' : 'free',
+      ),
       start,
     );
     const results = findBridgeRecommendations(edge, alwaysFree, start);
@@ -80,7 +78,11 @@ describe('bridge finder', () => {
   });
 
   it('joins shared days across a leap day and across a new year', () => {
-    const leap = findBridgeRecommendations(cycle(['free', 'work', 'free', 'work'], '2024-02-28'), alwaysFree, '2024-02-28');
+    const leap = findBridgeRecommendations(
+      cycle(['free', 'work', 'free', 'work'], '2024-02-28'),
+      alwaysFree,
+      '2024-02-28',
+    );
     expect(onDate(leap, '2024-02-29')?.resulting).toEqual({
       start: '2024-02-28',
       end: '2024-03-01',
@@ -88,7 +90,11 @@ describe('bridge finder', () => {
     });
     expect(onDate(leap, '2024-02-29')?.additionalSharedDays).toBe(1);
 
-    const year = findBridgeRecommendations(cycle(['free', 'work', 'free', 'work'], '2025-12-31'), alwaysFree, '2025-12-31');
+    const year = findBridgeRecommendations(
+      cycle(['free', 'work', 'free', 'work'], '2025-12-31'),
+      alwaysFree,
+      '2025-12-31',
+    );
     expect(onDate(year, '2026-01-01')?.resulting).toEqual({
       start: '2025-12-31',
       end: '2026-01-02',
@@ -117,8 +123,8 @@ describe('bridge finder', () => {
     expect(results[0]).toMatchObject({ date: addDays(start, 3), resulting: { days: 6 }, additionalSharedDays: 1 });
     expect(results[1]).toMatchObject({ date: addDays(start, 6), resulting: { days: 4 }, additionalSharedDays: 1 });
     for (let index = 1; index < results.length; index += 1) {
-      const previous = results[index - 1]!;
-      const current = results[index]!;
+      const previous = results[index - 1];
+      const current = results[index];
       expect(current.resulting.days).toBeLessThanOrEqual(previous.resulting.days);
       if (current.resulting.days === previous.resulting.days) {
         expect(compareIso(previous.date, current.date)).toBeLessThanOrEqual(0);

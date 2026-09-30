@@ -55,12 +55,8 @@ describe('shared free time', () => {
       pattern: ['work', 'free', 'free', 'work', 'work'],
       anchor: '2025-12-30',
     };
-    expect(sharedFreeIntervals(both, both, '2026-01-01', '2026-01-02')).toEqual([
-      interval('2025-12-31', '2026-01-01'),
-    ]);
-    expect(sharedFreeIntervals(both, both, '2025-12-30', '2025-12-31')).toEqual([
-      interval('2025-12-31', '2026-01-01'),
-    ]);
+    expect(sharedFreeIntervals(both, both, '2026-01-01', '2026-01-02')).toEqual([interval('2025-12-31', '2026-01-01')]);
+    expect(sharedFreeIntervals(both, both, '2025-12-30', '2025-12-31')).toEqual([interval('2025-12-31', '2026-01-01')]);
   });
 
   it('includes 29 February inside a shared free interval', () => {
@@ -69,14 +65,8 @@ describe('shared free time', () => {
       pattern: ['free', 'free', 'free', 'work'],
       anchor: '2024-02-28',
     };
-    expect(sharedFreeIntervals(both, both, '2024-03-01', '2024-03-02')).toEqual([
-      interval('2024-02-28', '2024-03-01'),
-    ]);
-    expect(sharedFreeDates(both, both, '2024-02-28', '2024-03-02')).toEqual([
-      '2024-02-28',
-      '2024-02-29',
-      '2024-03-01',
-    ]);
+    expect(sharedFreeIntervals(both, both, '2024-03-01', '2024-03-02')).toEqual([interval('2024-02-28', '2024-03-01')]);
+    expect(sharedFreeDates(both, both, '2024-02-28', '2024-03-02')).toEqual(['2024-02-28', '2024-02-29', '2024-03-01']);
   });
 
   it('does not merge shared days that have a working day between them', () => {

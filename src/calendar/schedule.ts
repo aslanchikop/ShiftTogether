@@ -106,12 +106,7 @@ function tryAddDays(iso: string, delta: number): string | null {
   }
 }
 
-function extendRun(
-  a: Schedule,
-  b: Schedule,
-  from: string,
-  step: -1 | 1,
-): { date: string; capped: boolean } {
+function extendRun(a: Schedule, b: Schedule, from: string, step: -1 | 1): { date: string; capped: boolean } {
   let date = from;
   let moved = 0;
   while (moved < MAX_SHARED_RUN_DAYS) {
@@ -130,12 +125,7 @@ function extendRun(
  * A run that starts before the range or ends after it is returned in full,
  * unless it is longer than the search cap.
  */
-export function sharedFreeIntervals(
-  a: Schedule,
-  b: Schedule,
-  rangeStart: string,
-  rangeEnd: string,
-): DateInterval[] {
+export function sharedFreeIntervals(a: Schedule, b: Schedule, rangeStart: string, rangeEnd: string): DateInterval[] {
   if (compareIso(rangeStart, rangeEnd) > 0) throw new RangeError('rangeStart is after rangeEnd');
 
   const intervals: DateInterval[] = [];

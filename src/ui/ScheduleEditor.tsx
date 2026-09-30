@@ -1,7 +1,7 @@
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { dayStatus, type DayKind, type Schedule } from '../calendar';
 import { fill } from '../i18n/format';
-import { useI18n } from '../i18n/LocaleProvider';
+import { useI18n } from '../i18n/useI18n';
 import { patternForPreset, presetIdForPattern, type PresetId } from '../schedules/presets';
 import type { PersonConfig } from '../schedules/types';
 import { CivilDateField } from './CivilDateField';
@@ -33,7 +33,9 @@ export function ScheduleEditor({ headingId, fallbackName, person, today, onChang
   const { messages } = useI18n();
   const schedule = person.schedule;
   const lastAnchor = useRef(schedule.type === 'cycle' ? schedule.anchor : today);
-  if (schedule.type === 'cycle') lastAnchor.current = schedule.anchor;
+  useEffect(() => {
+    if (schedule.type === 'cycle') lastAnchor.current = schedule.anchor;
+  }, [schedule]);
 
   const preset = presetOf(schedule);
   const shownName = displayName(person.name, fallbackName);
@@ -49,7 +51,9 @@ export function ScheduleEditor({ headingId, fallbackName, person, today, onChang
     }
     if (nextPreset === 'custom') {
       const pattern =
-        schedule.type === 'cycle' ? [...schedule.pattern] : (['work', 'work', 'work', 'work', 'work', 'free', 'free'] as DayKind[]);
+        schedule.type === 'cycle'
+          ? [...schedule.pattern]
+          : (['work', 'work', 'work', 'work', 'work', 'free', 'free'] as DayKind[]);
       updateSchedule({ type: 'cycle', anchor, pattern });
       return;
     }
@@ -93,7 +97,8 @@ export function ScheduleEditor({ headingId, fallbackName, person, today, onChang
           <p className="hint">
             {fill(messages.schedules.anchorHint, {
               name: shownName,
-              status: dayStatus(schedule, schedule.anchor) === 'work' ? messages.schedules.work : messages.schedules.free,
+              status:
+                dayStatus(schedule, schedule.anchor) === 'work' ? messages.schedules.work : messages.schedules.free,
             })}
           </p>
           <ul className="pattern">

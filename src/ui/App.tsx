@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { daysInMonth, formatIsoDate, parseIsoDate, shiftMonth } from '../calendar';
 import { monthTitle, previewComparison } from '../i18n/format';
-import { useI18n } from '../i18n/LocaleProvider';
+import { useI18n } from '../i18n/useI18n';
 import { LOCALE_NAMES, LOCALES } from '../i18n/types';
 import { findBridgeRecommendations, type BridgeRecommendation } from '../schedules/bridge';
 import { createDemoPeople } from '../schedules/demo';
-import { previewAfterViewChange, reconcilePreview, sameRecommendation, type PreviewSession } from '../schedules/preview';
+import { previewAfterViewChange, reconcilePreview, type PreviewSession } from '../schedules/preview';
 import { loadAppState, saveAppState } from '../schedules/state';
 import { findNextSharedPeriod, summarizeSharedMonth } from '../schedules/summary';
 import type { AppState, PersonConfig } from '../schedules/types';
@@ -64,13 +64,7 @@ export function App() {
     month: state.month,
     day: daysInMonth(state.year, state.month),
   });
-  const summary = summarizeSharedMonth(
-    state.personA.schedule,
-    state.personB.schedule,
-    monthStart,
-    monthEnd,
-    today,
-  );
+  const summary = summarizeSharedMonth(state.personA.schedule, state.personB.schedule, monthStart, monthEnd, today);
   const next = findNextSharedPeriod(state.personA.schedule, state.personB.schedule, today);
   const bridges = useMemo(
     () => findBridgeRecommendations(state.personA.schedule, state.personB.schedule, today),
@@ -90,16 +84,6 @@ export function App() {
     const visible = viewMonth(year, month, today);
     setState((current) => ({ ...current, ...visible }));
   };
-
-  useEffect(() => {
-    setPreview((current) => {
-      if (!current) return null;
-      const next = reconcilePreview(current.recommendation, bridges);
-      if (!next) return null;
-      if (sameRecommendation(current.recommendation, next)) return current;
-      return { ...current, recommendation: next };
-    });
-  }, [bridges]);
 
   const resetDemo = () => {
     const currentToday = localCivilToday();
@@ -140,18 +124,19 @@ export function App() {
     });
     showMonth(parts.year, parts.month);
     const motion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    document.getElementById('shared-calendar')?.scrollIntoView({ behavior: motion ? 'auto' : 'smooth', block: 'start' });
+    document
+      .getElementById('shared-calendar')
+      ?.scrollIntoView({ behavior: motion ? 'auto' : 'smooth', block: 'start' });
   };
 
-  const shownPreview = previewAfterViewChange(preview);
-  const previewName = shownPreview
-    ? shownPreview.recommendation.person === 'a'
-      ? nameA
-      : nameB
-    : '';
-  const previewCopy = shownPreview
-    ? previewComparison(shownPreview.recommendation, previewName, today, locale)
-    : null;
+  const shownPreview = useMemo<PreviewSession | null>(() => {
+    const session = previewAfterViewChange(preview);
+    if (!session) return null;
+    const recommendation = reconcilePreview(session.recommendation, bridges);
+    return recommendation ? { ...session, recommendation } : null;
+  }, [preview, bridges]);
+  const previewName = shownPreview ? (shownPreview.recommendation.person === 'a' ? nameA : nameB) : '';
+  const previewCopy = shownPreview ? previewComparison(shownPreview.recommendation, previewName, today, locale) : null;
 
   return (
     <div className="page">
@@ -207,7 +192,9 @@ export function App() {
               nameA={nameA}
               nameB={nameB}
               today={today}
-              activeKey={shownPreview ? `${shownPreview.recommendation.person}:${shownPreview.recommendation.date}` : null}
+              activeKey={
+                shownPreview ? `${shownPreview.recommendation.person}:${shownPreview.recommendation.date}` : null
+              }
               onPreview={startPreview}
             />
           )}

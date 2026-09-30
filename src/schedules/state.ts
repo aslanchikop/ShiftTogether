@@ -16,11 +16,15 @@ function parseName(value: unknown): string | null {
   return trimmed;
 }
 
+function isDayKind(value: unknown): value is DayKind {
+  return value === 'work' || value === 'free';
+}
+
 function parsePattern(value: unknown): DayKind[] | null {
   if (!Array.isArray(value) || value.length < 1 || value.length > MAX_PATTERN) return null;
   const pattern: DayKind[] = [];
   for (const item of value) {
-    if (item !== 'work' && item !== 'free') return null;
+    if (!isDayKind(item)) return null;
     pattern.push(item);
   }
   return pattern;

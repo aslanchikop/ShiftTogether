@@ -1,6 +1,6 @@
 import { buildMonthGrid, compareIso, dayStatus, type DayKind } from '../calendar';
 import { fill, formatCivilDate } from '../i18n/format';
-import { useI18n } from '../i18n/LocaleProvider';
+import { useI18n } from '../i18n/useI18n';
 import type { PersonConfig } from '../schedules/types';
 
 interface MonthCalendarProps {
@@ -87,7 +87,11 @@ export function MonthCalendar({
         <div className="month-pick">
           <label>
             <span className="sr-only">{messages.calendar.month}</span>
-            <select aria-label={messages.calendar.month} value={month} onChange={(event) => onSelectMonth(Number(event.target.value))}>
+            <select
+              aria-label={messages.calendar.month}
+              value={month}
+              onChange={(event) => onSelectMonth(Number(event.target.value))}
+            >
               {messages.months.map((name, index) => (
                 <option key={name} value={index + 1}>
                   {name}

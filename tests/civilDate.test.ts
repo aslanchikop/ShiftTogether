@@ -94,7 +94,7 @@ describe('civil dates', () => {
     const january2024 = buildMonthGrid(2024, 1);
     expect(january2024.length % 7).toBe(0);
     expect(january2024[0]?.date).toBe('2024-01-01');
-    expect(isoWeekday(january2024[0]!.date)).toBe(1);
+    expect(isoWeekday(january2024[0].date)).toBe(1);
     expect(january2024.filter((cell) => cell.inMonth)).toHaveLength(31);
 
     const february2024 = buildMonthGrid(2024, 2);
@@ -143,5 +143,5 @@ function stepForward(parts: { year: number; month: number; day: number }) {
 
 function expectedWeekday(deltaFromThursdayEpoch: number): number {
   const mondayBased = (4 - 1 + deltaFromThursdayEpoch) % 7;
-  return ((mondayBased % 7) + 7) % 7 + 1;
+  return (((mondayBased % 7) + 7) % 7) + 1;
 }

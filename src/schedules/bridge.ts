@@ -6,14 +6,7 @@
  * `start` is the first day of a 90-day window. The clock is not read here.
  */
 
-import {
-  addDays,
-  compareIso,
-  daysBetween,
-  dayStatus,
-  isSharedFree,
-  type Schedule,
-} from '../calendar';
+import { addDays, compareIso, daysBetween, dayStatus, isSharedFree, type Schedule } from '../calendar';
 
 /** Days examined, including `start`. The last candidate is start + 89 days. */
 export const BRIDGE_SEARCH_DAYS = 90;
@@ -24,10 +17,7 @@ export const BRIDGE_RESULT_LIMIT = 5;
 export type BridgePerson = 'a' | 'b';
 
 export type BridgeExplanation =
-  | 'extended-period-before'
-  | 'extended-period-after'
-  | 'joined-two-periods'
-  | 'created-period';
+  'extended-period-before' | 'extended-period-after' | 'joined-two-periods' | 'created-period';
 
 export interface BridgeInterval {
   start: string;
@@ -154,11 +144,7 @@ function better(left: BridgeRecommendation, right: BridgeRecommendation): number
  * Hypothetical single days off, ranked by the length of the shared run they
  * would create, then by earlier date, then Person A before Person B.
  */
-export function findBridgeRecommendations(
-  personA: Schedule,
-  personB: Schedule,
-  start: string,
-): BridgeRecommendation[] {
+export function findBridgeRecommendations(personA: Schedule, personB: Schedule, start: string): BridgeRecommendation[] {
   const end = addDays(start, BRIDGE_SEARCH_DAYS - 1);
   const found: BridgeRecommendation[] = [];
   let cursor = start;

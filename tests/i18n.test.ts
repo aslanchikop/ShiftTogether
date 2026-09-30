@@ -23,7 +23,7 @@ function memoryStore(seed: Record<string, string> = {}): KeyValueStore & { data:
   const data = { ...seed };
   return {
     data,
-    getItem: (key) => (key in data ? data[key]! : null),
+    getItem: (key) => (key in data ? data[key] : null),
     setItem: (key, value) => {
       data[key] = value;
     },
@@ -121,8 +121,12 @@ describe('localized summaries and bridge cards', () => {
   });
 
   it('names an extension, a join, and a new day without calling the new day an extension', () => {
-    const join = findBridgeRecommendations(personA, alwaysFree, '2024-06-03').find((item) => item.date === '2024-06-04');
-    const extend = findBridgeRecommendations(extendA, alwaysFree, '2024-01-06').find((item) => item.date === '2024-01-06');
+    const join = findBridgeRecommendations(personA, alwaysFree, '2024-06-03').find(
+      (item) => item.date === '2024-06-04',
+    );
+    const extend = findBridgeRecommendations(extendA, alwaysFree, '2024-01-06').find(
+      (item) => item.date === '2024-01-06',
+    );
     const created = createdDay();
     expect(join?.explanation).toBe('joined-two-periods');
     expect(extend?.explanation).toBe('extended-period-after');

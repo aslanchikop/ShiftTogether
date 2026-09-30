@@ -1,13 +1,6 @@
 import { compareIso, parseIsoDate } from '../calendar';
-import {
-  fill,
-  formatMonthCount,
-  formatPeriodSpan,
-  formatRange,
-  heroKicker,
-  horizonEmpty,
-} from '../i18n/format';
-import { useI18n } from '../i18n/LocaleProvider';
+import { fill, formatMonthCount, formatPeriodSpan, formatRange, heroKicker, horizonEmpty } from '../i18n/format';
+import { useI18n } from '../i18n/useI18n';
 import type { NextSharedPeriod, SharedMonthSummary } from '../schedules/summary';
 
 interface NextTogetherProps {

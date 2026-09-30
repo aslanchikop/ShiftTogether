@@ -12,8 +12,8 @@
   --a: #8a5a12;
   --b: #3d5f86;
   --work: #8f877c;
-  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
-  --sans: "Segoe UI", "Helvetica Neue", sans-serif;
+  --serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+  --sans: 'Segoe UI', 'Helvetica Neue', sans-serif;
   --radius: 18px;
   font-family: var(--sans);
   line-height: 1.45;
@@ -21,9 +21,13 @@
   background: var(--bg);
 }
 
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
-body { margin: 0; }
+body {
+  margin: 0;
+}
 
 button,
 input,
@@ -46,7 +50,9 @@ button {
   cursor: pointer;
 }
 
-button:hover { border-color: #c9bba8; }
+button:hover {
+  border-color: #c9bba8;
+}
 
 button:disabled {
   cursor: not-allowed;
@@ -61,7 +67,9 @@ select:focus-visible {
 }
 
 input,
-select { padding: 0.35rem 0.6rem; }
+select {
+  padding: 0.35rem 0.6rem;
+}
 
 .page {
   max-width: 1240px;
@@ -127,7 +135,7 @@ h2 {
   background: transparent;
 }
 
-.lang-switch button[aria-pressed="true"] {
+.lang-switch button[aria-pressed='true'] {
   background: var(--ink);
   color: #fff;
   border-color: var(--ink);
@@ -145,7 +153,7 @@ h2 {
   background: transparent;
 }
 
-.views button[aria-selected="true"] {
+.views button[aria-selected='true'] {
   background: var(--ink);
   color: #fff;
   border-color: var(--ink);
@@ -193,7 +201,9 @@ h2 {
   margin: 0;
 }
 
-.bridge-result { font-weight: 600; }
+.bridge-result {
+  font-weight: 600;
+}
 
 .bridge-facts {
   display: flex;
@@ -222,11 +232,15 @@ h2 {
   font-size: 0.92rem;
 }
 
-.bridge-empty { margin-top: 0.8rem; }
+.bridge-empty {
+  margin-top: 0.8rem;
+}
 
-.suggest-note { margin: 0 0 0.6rem; }
+.suggest-note {
+  margin: 0 0 0.6rem;
+}
 
-.calendar td[data-preview="proposed"] {
+.calendar td[data-preview='proposed'] {
   background-color: #fff;
   background-image: repeating-linear-gradient(
     -45deg,
@@ -239,15 +253,15 @@ h2 {
   box-shadow: inset 0 0 0 2px var(--accent);
 }
 
-.calendar td[data-preview="proposed"] .tag {
+.calendar td[data-preview='proposed'] .tag {
   color: var(--accent);
 }
 
-.calendar td[data-preview="span"] {
+.calendar td[data-preview='span'] {
   box-shadow: inset 0 -3px 0 var(--accent);
 }
 
-.legend li[data-status="preview"] .swatch {
+.legend li[data-status='preview'] .swatch {
   background-color: #fff;
   background-image: repeating-linear-gradient(
     -45deg,
@@ -468,42 +482,48 @@ footer p {
   text-transform: none;
 }
 
-.calendar td[data-status="working"] .tag {
+.calendar td[data-status='working'] .tag {
   color: var(--work);
   font-weight: 600;
 }
 
-.calendar td[data-status="free-a"] {
+.calendar td[data-status='free-a'] {
   box-shadow: inset 0 0 0 1px #eadcc4;
 }
 
-.calendar td[data-status="free-a"] .tag { color: var(--a); }
+.calendar td[data-status='free-a'] .tag {
+  color: var(--a);
+}
 
-.calendar td[data-status="free-b"] {
+.calendar td[data-status='free-b'] {
   box-shadow: inset 0 0 0 1px #d5e0ec;
 }
 
-.calendar td[data-status="free-b"] .tag { color: var(--b); }
+.calendar td[data-status='free-b'] .tag {
+  color: var(--b);
+}
 
-.calendar td[data-status="shared"] {
+.calendar td[data-status='shared'] {
   background: var(--accent);
   color: var(--accent-ink);
 }
 
-.calendar td[data-status="shared"] .tag { color: inherit; }
+.calendar td[data-status='shared'] .tag {
+  color: inherit;
+}
 
-.calendar td[data-outside="true"] {
+.calendar td[data-outside='true'] {
   opacity: 0.45;
 }
 
-.calendar td[data-outside="true"][data-status="shared"] {
+.calendar td[data-outside='true'][data-status='shared'] {
   background: transparent;
   color: var(--accent);
   box-shadow: inset 0 0 0 1.5px var(--accent);
   opacity: 0.72;
 }
 
-.calendar td[data-today="true"] .num {
+.calendar td[data-today='true'] .num {
   text-decoration: underline;
   text-decoration-thickness: 2px;
   text-underline-offset: 0.18em;
@@ -534,13 +554,17 @@ footer p {
   box-shadow: inset 0 0 0 1px #ddd4c6;
 }
 
-.legend li[data-status="shared"] .swatch {
+.legend li[data-status='shared'] .swatch {
   background: var(--accent);
   box-shadow: none;
 }
 
-.legend li[data-status="free-a"] .swatch { box-shadow: inset 0 0 0 1.5px var(--a); }
-.legend li[data-status="free-b"] .swatch { box-shadow: inset 0 0 0 1.5px var(--b); }
+.legend li[data-status='free-a'] .swatch {
+  box-shadow: inset 0 0 0 1.5px var(--a);
+}
+.legend li[data-status='free-b'] .swatch {
+  box-shadow: inset 0 0 0 1.5px var(--b);
+}
 
 .section-head p {
   margin: 0.2rem 0 0;
@@ -623,9 +647,13 @@ footer p {
   border-top: 1px solid var(--line);
 }
 
-.person { padding-bottom: 0.85rem; }
+.person {
+  padding-bottom: 0.85rem;
+}
 
-.person h2 { margin-bottom: 0.55rem; }
+.person h2 {
+  margin-bottom: 0.55rem;
+}
 
 .field-grid {
   display: grid;
@@ -643,7 +671,9 @@ footer p {
   font-weight: 600;
 }
 
-.field-grid .field { margin-bottom: 0; }
+.field-grid .field {
+  margin-bottom: 0;
+}
 
 .field input,
 .field select,
@@ -695,7 +725,9 @@ footer p {
   border-color: transparent;
 }
 
-.weekdays { gap: 0.4rem; }
+.weekdays {
+  gap: 0.4rem;
+}
 
 .day-toggle {
   flex-direction: column;
@@ -707,8 +739,14 @@ footer p {
   line-height: 1.15;
 }
 
-.toggle-day { font-size: 0.78rem; }
-.toggle-kind { font-size: 0.68rem; letter-spacing: 0; text-transform: none; }
+.toggle-day {
+  font-size: 0.78rem;
+}
+.toggle-kind {
+  font-size: 0.68rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
 
 .day-toggle.work {
   background: var(--ink);
@@ -746,40 +784,100 @@ footer {
 }
 
 @media (max-width: 880px) {
-  .workspace { grid-template-columns: 1fr; }
-  .secondary { max-width: none; }
+  .workspace {
+    grid-template-columns: 1fr;
+  }
+  .secondary {
+    max-width: none;
+  }
 }
 
 @media (max-width: 720px) {
-  .page { padding: 1.1rem 0.9rem 2rem; }
-  .views button { flex: 1; }
-  .calendar-head { justify-content: stretch; }
-  .month-pick { flex: 1 0 100%; order: -1; }
-  .calendar-head > button { flex: 1; }
+  .page {
+    padding: 1.1rem 0.9rem 2rem;
+  }
+  .views button {
+    flex: 1;
+  }
+  .calendar-head {
+    justify-content: stretch;
+  }
+  .month-pick {
+    flex: 1 0 100%;
+    order: -1;
+  }
+  .calendar-head > button {
+    flex: 1;
+  }
   .month-pick select,
-  .month-pick input { font-size: 1.35rem; }
-  h1 { font-size: 2.05rem; }
-  .hero { padding: 1.1rem 1rem 1rem; }
-  .hero-date { font-size: 2.45rem; }
-  .top { align-items: stretch; flex-direction: column; }
+  .month-pick input {
+    font-size: 1.35rem;
+  }
+  h1 {
+    font-size: 2.05rem;
+  }
+  .hero {
+    padding: 1.1rem 1rem 1rem;
+  }
+  .hero-date {
+    font-size: 2.45rem;
+  }
+  .top {
+    align-items: stretch;
+    flex-direction: column;
+  }
   .top-actions,
-  .lang-switch { justify-content: stretch; width: 100%; }
+  .lang-switch {
+    justify-content: stretch;
+    width: 100%;
+  }
   .lang-switch button,
-  .reset { flex: 1; }
-  .bridge-card { grid-template-columns: 1fr; }
-  .bridge-card button { grid-column: 1; grid-row: auto; justify-self: start; }
-  .preview-banner { flex-direction: column; }
-  .preview-compare { grid-template-columns: 1fr; }
-  .preview-exit { width: 100%; }
-  .field-grid { grid-template-columns: 1fr; }
-  .calendar { border-spacing: 3px; }
-  .calendar td { height: 3.7rem; border-radius: 9px; }
-  .num { font-size: 1rem; }
-  .tag { font-size: 0.7rem; }
-  .period { grid-template-columns: 4.2rem minmax(0, 1fr); }
-  .period-state { grid-column: 2; }
+  .reset {
+    flex: 1;
+  }
+  .bridge-card {
+    grid-template-columns: 1fr;
+  }
+  .bridge-card button {
+    grid-column: 1;
+    grid-row: auto;
+    justify-self: start;
+  }
+  .preview-banner {
+    flex-direction: column;
+  }
+  .preview-compare {
+    grid-template-columns: 1fr;
+  }
+  .preview-exit {
+    width: 100%;
+  }
+  .field-grid {
+    grid-template-columns: 1fr;
+  }
+  .calendar {
+    border-spacing: 3px;
+  }
+  .calendar td {
+    height: 3.7rem;
+    border-radius: 9px;
+  }
+  .num {
+    font-size: 1rem;
+  }
+  .tag {
+    font-size: 0.7rem;
+  }
+  .period {
+    grid-template-columns: 4.2rem minmax(0, 1fr);
+  }
+  .period-state {
+    grid-column: 2;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  * { scroll-behavior: auto; }
+  * {
+    scroll-behavior: auto;
+  }
 }
