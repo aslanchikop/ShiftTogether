@@ -184,6 +184,8 @@ export function App() {
               monthStart={monthStart}
               monthEnd={monthEnd}
               today={today}
+              nameA={nameA}
+              nameB={nameB}
               onShowPeriod={showMonth}
             />
           ) : (
@@ -242,6 +244,9 @@ export function App() {
               monthLabel={monthLabel}
               monthRelation={summary.monthRelation}
               today={today}
+              nameA={nameA}
+              nameB={nameB}
+              downloadName={`shifttogether-${state.year}-${String(state.month).padStart(2, '0')}`}
             />
           ) : null}
           <section className="schedules" aria-labelledby="schedules-heading">

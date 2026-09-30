@@ -139,6 +139,11 @@ export const kk: Messages = {
     spanLabel: 'Болжамды ортақ кезеңнің бөлігі.',
     legend: 'Штрих: ықтимал демалыс, сақталмаған',
   },
+  ics: {
+    save: 'Күнтізбеге қосу',
+    month: 'Айды .ics ретінде сақтау',
+    summary: 'Бірге бос күндер: {nameA} және {nameB}',
+  },
   quantity: {
     day: { one: 'күн', few: 'күн', many: 'күн' },
     sharedDay: { one: 'ортақ күн', few: 'ортақ күн', many: 'ортақ күн' },

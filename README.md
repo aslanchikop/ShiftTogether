@@ -44,6 +44,10 @@ Leap days are ordinary civil days. In 2024, 29 February exists and the cycle adv
 
 The only use of the system clock is choosing "today" for the first month and the demo anchor. That reading uses the local calendar year, month, and day.
 
+## Calendar export
+
+The next shared period and the whole viewed month can be saved as an .ics file. Each shared run becomes one all-day event, so a weekend together is one entry. The .ics end is the day after the last shared day, because iCalendar ends are exclusive. The file is built in the browser and downloaded directly. Nothing is uploaded.
+
 ## Project layout
 
 ```text
@@ -64,7 +68,6 @@ The current pair of schedules is stored in `localStorage` under `shifttogether.v
 
 - Public holidays, one-off shift swaps, or more than two people
 - Accounts, sync, or sharing
-- Calendar export
 - A deployment workflow
 
 ## License

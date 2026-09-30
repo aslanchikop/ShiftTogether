@@ -139,6 +139,11 @@ export const en: Messages = {
     spanLabel: 'Part of the hypothetical shared period.',
     legend: 'Hatched day: possible day off, not saved',
   },
+  ics: {
+    save: 'Add to calendar',
+    month: 'Save the month as .ics',
+    summary: 'Days together: {nameA} and {nameB}',
+  },
   quantity: {
     day: { one: 'day', few: 'days', many: 'days' },
     sharedDay: { one: 'shared day', few: 'shared days', many: 'shared days' },

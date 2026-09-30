@@ -139,6 +139,11 @@ export const ru: Messages = {
     spanLabel: 'Часть возможного общего периода.',
     legend: 'Штриховка: возможный выходной, не сохранён',
   },
+  ics: {
+    save: 'Добавить в календарь',
+    month: 'Сохранить месяц как .ics',
+    summary: 'Дни вместе: {nameA} и {nameB}',
+  },
   quantity: {
     day: { one: 'день', few: 'дня', many: 'дней' },
     sharedDay: { one: 'общий день', few: 'общих дня', many: 'общих дней' },

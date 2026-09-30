@@ -402,6 +402,21 @@ footer p {
   font-weight: 600;
 }
 
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.9rem;
+  margin-top: 0.85rem;
+}
+
+.hero-actions .text-button {
+  margin-top: 0;
+}
+
+.section-head .text-button {
+  margin-top: 0.45rem;
+}
+
 .calendar-panel {
   padding: 0.35rem 0 0;
 }

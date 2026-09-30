@@ -119,6 +119,11 @@ export interface Messages {
     spanLabel: string;
     legend: string;
   };
+  ics: {
+    save: string;
+    month: string;
+    summary: string;
+  };
   quantity: {
     day: PluralForms;
     sharedDay: PluralForms;
