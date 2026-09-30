@@ -24,6 +24,16 @@ npm run preview
 
 The production files are written to `dist/`. Because the asset paths are relative, that folder can be hosted on GitHub Pages or opened from a static file server.
 
+## Deploy
+
+Every push to `main` runs the full `npm run verify` pipeline in GitHub Actions, builds `dist/`, and publishes it to GitHub Pages. Enable it once in the repository settings: Settings → Pages → Build and deployment → Source: **GitHub Actions**. The app is then served at:
+
+```text
+https://aslanchikop.github.io/ShiftTogether/
+```
+
+The workflow file is `.github/workflows/deploy.yml`. It can also be started by hand from the Actions tab.
+
 ## Calendar model
 
 All schedule math uses ISO civil dates (`YYYY-MM-DD`). A date is a Gregorian year, month, and day. The engine does not convert those days through UTC timestamps, so a time zone cannot move a shift onto the previous or next calendar date.
@@ -68,7 +78,6 @@ The current pair of schedules is stored in `localStorage` under `shifttogether.v
 
 - Public holidays, one-off shift swaps, or more than two people
 - Accounts, sync, or sharing
-- A deployment workflow
 
 ## License
 
